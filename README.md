@@ -1,4 +1,3 @@
-# A_Pomodoro
-iOS Pomodoro timer
+# A•Pomodoro
 
-For iPhone, iPad, mac and Apple Watch. Using Swift and CloudKit
+Pomodoro timer apps for iPhone, iPad, mac and Apple Watch. Using Swift and CloudKit
