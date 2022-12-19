@@ -10,7 +10,7 @@ import SwiftUI
 struct TimerView: View {
 
     static let notificationIdentifier = "Pomodoro"
-    static let multiplier: Int32 = 1
+    static let multiplier: Int32 = 60
     
     @EnvironmentObject var modelData: ModelData
     var seconds: Int32
@@ -72,7 +72,7 @@ struct TimerView: View {
 
     func updateRemaining() {
         let elapsed = -startDate!.timeIntervalSinceNow
-        remaining = Int32(Int(Double(seconds) - elapsed))
+        remaining = max(0, Int32(Int(Double(seconds) - elapsed)))
     }
     
     func scheduleNotification() {
