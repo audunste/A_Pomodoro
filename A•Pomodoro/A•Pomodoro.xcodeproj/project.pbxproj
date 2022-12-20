@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		54240B92294D1D3100DD19F9 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54240B91294D1D3100DD19F9 /* TimerView.swift */; };
 		54240B94294D46C700DD19F9 /* ContentStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54240B93294D46C700DD19F9 /* ContentStyle.swift */; };
+		54314503295081E2004EF411 /* TimerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54314502295081E2004EF411 /* TimerType.swift */; };
 		54DD36AB294689D3000D931A /* A_PomodoroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54DD36AA294689D3000D931A /* A_PomodoroApp.swift */; };
 		54DD36AD294689D3000D931A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54DD36AC294689D3000D931A /* ContentView.swift */; };
 		54DD36AF294689D6000D931A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54DD36AE294689D6000D931A /* Assets.xcassets */; };
@@ -41,6 +42,7 @@
 		54240B91294D1D3100DD19F9 /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		54240B93294D46C700DD19F9 /* ContentStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentStyle.swift; sourceTree = "<group>"; };
 		54314501294FD33D004EF411 /* A-Pomodoro-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "A-Pomodoro-Info.plist"; sourceTree = SOURCE_ROOT; };
+		54314502295081E2004EF411 /* TimerType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerType.swift; sourceTree = "<group>"; };
 		54DD36A7294689D3000D931A /* A•Pomodoro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "A•Pomodoro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		54DD36AA294689D3000D931A /* A_PomodoroApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = A_PomodoroApp.swift; sourceTree = "<group>"; };
 		54DD36AC294689D3000D931A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 			children = (
 				54DD36D6294F950D000D931A /* AppColor.swift */,
 				54DD36D8294F9871000D931A /* ModelData.swift */,
+				54314502295081E2004EF411 /* TimerType.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -295,6 +298,7 @@
 				54240B94294D46C700DD19F9 /* ContentStyle.swift in Sources */,
 				54DD36AD294689D3000D931A /* ContentView.swift in Sources */,
 				54DD36AB294689D3000D931A /* A_PomodoroApp.swift in Sources */,
+				54314503295081E2004EF411 /* TimerType.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
