@@ -1,8 +1,8 @@
 //
 //  A_PomodoroUITestsLaunchTests.swift
-//  A•PomodoroUITests
+//  A-PomodoroUITests
 //
-//  Created by Audun Steinholm on 11/12/2022.
+//  Created by Audun Steinholm on 21/12/2022.
 //
 
 import XCTest

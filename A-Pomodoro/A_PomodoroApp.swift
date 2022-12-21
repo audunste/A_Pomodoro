@@ -1,17 +1,17 @@
 //
 //  A_PomodoroApp.swift
-//  A•Pomodoro
+//  A-Pomodoro
 //
-//  Created by Audun Steinholm on 11/12/2022.
+//  Created by Audun Steinholm on 21/12/2022.
 //
 
 import SwiftUI
-import UserNotifications
 
 @main
 struct A_PomodoroApp: App {
+    let persistenceController = PersistenceController.shared
     @StateObject private var modelData = ModelData()
-    
+
     init() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
         { success, error in
@@ -20,10 +20,11 @@ struct A_PomodoroApp: App {
             }
         }
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .environmentObject(modelData)
                 .preferredColorScheme(.dark)
         }
