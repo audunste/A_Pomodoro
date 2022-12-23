@@ -9,7 +9,8 @@ import SwiftUI
 
 @main
 struct A_PomodoroApp: App {
-    let persistenceController = PersistenceController.shared
+    @UIApplicationDelegateAdaptor var appDelegate: AppDelegate
+    let persistentContainer = PersistenceController.shared.persistentContainer
     @StateObject private var modelData = ModelData()
 
     init() {
@@ -22,11 +23,19 @@ struct A_PomodoroApp: App {
     }
 
     var body: some Scene {
+        #if InitializeCloudKitSchema
+        WindowGroup {
+            Text("Initializing CloudKit Schema...").font(.title)
+            Text("Stop after Xcode says 'no more requests to execute', " +
+                 "then check with CloudKit Console if the schema is created correctly.").padding()
+        }
+        #else
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environment(\.managedObjectContext, persistentContainer.viewContext)
                 .environmentObject(modelData)
                 .preferredColorScheme(.dark)
         }
+        #endif
     }
 }
