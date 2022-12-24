@@ -18,3 +18,13 @@ extension NSPersistentCloudKitContainer {
         return context
     }
 }
+
+extension NSManagedObjectContext {
+    func saveAndLogError() {
+        do {
+            try save()
+        } catch {
+            print("Failed to save Core Data context: \(error)")
+        }
+    }
+}

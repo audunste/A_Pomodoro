@@ -23,6 +23,9 @@
 		5460DF6D2954CF4B00D00E0E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 546754442953343A00EA7F5E /* Assets.xcassets */; };
 		5460DF7429552C2C00D00E0E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7329552C2C00D00E0E /* AppDelegate.swift */; };
 		5460DF752955A34600D00E0E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7329552C2C00D00E0E /* AppDelegate.swift */; };
+		5460DF772955A89100D00E0E /* Persistence+PomodoroEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF762955A89100D00E0E /* Persistence+PomodoroEntry.swift */; };
+		5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */; };
+		5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */; };
 		5467543C2953343800EA7F5E /* A_PomodoroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5467543B2953343800EA7F5E /* A_PomodoroApp.swift */; };
 		5467543E2953343800EA7F5E /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5467543D2953343800EA7F5E /* Persistence.swift */; };
 		546754412953343800EA7F5E /* A-Pomodoro.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 5467543F2953343800EA7F5E /* A-Pomodoro.xcdatamodeld */; };
@@ -61,6 +64,9 @@
 		5460DF712954CF4B00D00E0E /* InitializeCloudKitSchema.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InitializeCloudKitSchema.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5460DF722954CF4B00D00E0E /* A-Pomodoro copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "A-Pomodoro copy-Info.plist"; path = "/Users/audun/dev/A_Pomodoro/A-Pomodoro copy-Info.plist"; sourceTree = "<absolute>"; };
 		5460DF7329552C2C00D00E0E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		5460DF762955A89100D00E0E /* Persistence+PomodoroEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+PomodoroEntry.swift"; sourceTree = "<group>"; };
+		5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestObjectBinder.swift; sourceTree = "<group>"; };
+		5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PomodoroEntry+Util.swift"; sourceTree = "<group>"; };
 		546754382953343800EA7F5E /* A-Pomodoro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "A-Pomodoro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5467543B2953343800EA7F5E /* A_PomodoroApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = A_PomodoroApp.swift; sourceTree = "<group>"; };
 		5467543D2953343800EA7F5E /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
@@ -193,7 +199,10 @@
 				546754732953350600EA7F5E /* TimerType.swift */,
 				5467543D2953343800EA7F5E /* Persistence.swift */,
 				5460DF4229549AEB00D00E0E /* Persistence+History.swift */,
+				5460DF762955A89100D00E0E /* Persistence+PomodoroEntry.swift */,
 				5460DF442954A1C400D00E0E /* CoreDataHelper.swift */,
+				5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */,
+				5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -378,9 +387,12 @@
 				5460DF4329549AEB00D00E0E /* Persistence+History.swift in Sources */,
 				54675470295334FB00EA7F5E /* TimerView.swift in Sources */,
 				5467543C2953343800EA7F5E /* A_PomodoroApp.swift in Sources */,
+				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
 				546754772953350700EA7F5E /* ModelData.swift in Sources */,
 				54675471295334FB00EA7F5E /* ContentView.swift in Sources */,
+				5460DF772955A89100D00E0E /* Persistence+PomodoroEntry.swift in Sources */,
 				546754752953350700EA7F5E /* AppColor.swift in Sources */,
+				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
 				5467543E2953343800EA7F5E /* Persistence.swift in Sources */,
 				546754762953350700EA7F5E /* TimerType.swift in Sources */,
 				546754412953343800EA7F5E /* A-Pomodoro.xcdatamodeld in Sources */,

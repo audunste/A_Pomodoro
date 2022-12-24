@@ -6,19 +6,21 @@
 //
 
 import SwiftUI
+import CoreData
 
 struct TimerView: View {
 
     static let notificationIdentifier = "Pomodoro"
     static let multiplier: Int32 = 60
     
+    @Environment(\.managedObjectContext) private var viewContext
+    @StateObject private var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
+        container: PersistenceController.shared.persistentContainer,
+        sortKey: "startDate")
     @EnvironmentObject var modelData: ModelData
     var seconds: Int32
     var timerType: TimerType
     @State var timer: Timer? = nil
-    @State var startDate: Date? = nil
-    @State var pauseStartDate: Date? = nil
-    @State var pauseDuration: TimeInterval = 0
     @AppStorage("focusAndBreakStage") private var focusAndBreakStage = 0
 
     // calculated
@@ -29,26 +31,37 @@ struct TimerView: View {
         self.timerType = timerType
         _remaining = State(initialValue: seconds)
     }
+    
+    private var lastPomodoroEntry: PomodoroEntry? {
+        lastPomodoroEntryBinder.managedObject
+    }
 
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
+            if let lastPomodoroEntry = lastPomodoroEntryBinder.managedObject {
+                Text("Has pomodoro entry \(lastPomodoroEntry.timerType!)")
+            }
             Text(String(format: "%02d:%02d", (remaining / 60), remaining % 60))
             .font(.system(size: 80).monospacedDigit())
             .padding(EdgeInsets(top: 0, leading: 56, bottom: 0, trailing: 56))
             if (timer == nil) {
                 Button {
-                    if (pauseStartDate == nil) {
-                        startDate = Date()
-                        pauseDuration = 0
-                        remaining = seconds - 1
-                    } else {
-                        let duration = -pauseStartDate!.timeIntervalSinceNow
-                        pauseDuration += duration
-                        pauseStartDate = nil
+                    if (lastPomodoroEntry?.isPaused ?? false) {
+                        let duration = -lastPomodoroEntry!.pauseDate!.timeIntervalSinceNow
+                        lastPomodoroEntry!.pauseSeconds += duration
+                        lastPomodoroEntry!.pauseDate = nil
+                        viewContext.saveAndLogError()
                         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
                             t in
                             updateRemaining()
                         }
+                    } else {
+                        let entry = PomodoroEntry(context: viewContext)
+                        entry.startDate = Date()
+                        entry.stage = Int64(getExpectedStage())
+                        entry.timerType = timerType.rawValue
+                        entry.timeSeconds = Double(seconds)
+                        remaining = seconds - 1
                     }
                     timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true)
                     { t in
@@ -80,8 +93,12 @@ struct TimerView: View {
                     Button {
                         timer!.invalidate()
                         timer = nil
-                        startDate = nil
-                        pauseStartDate = nil
+                        if let entry = lastPomodoroEntry {
+                            if entry.stage == focusAndBreakStage {
+                                viewContext.delete(entry)
+                                viewContext.saveAndLogError()
+                            }
+                        }
                         remaining = seconds
                         cancelNotification()
                     } label: {
@@ -92,7 +109,10 @@ struct TimerView: View {
                             .colorMultiply(modelData.appColor.textColor)
                     }
                     Button {
-                        pauseStartDate = Date()
+                        if let entry = lastPomodoroEntry {
+                            entry.pauseDate = Date()
+                            viewContext.saveAndLogError()
+                        }
                         timer!.invalidate()
                         timer = nil
                         cancelNotification()
@@ -123,15 +143,16 @@ struct TimerView: View {
             stage in
             if (getExpectedStage() != stage) {
                 remaining = seconds
-                pauseDuration = 0
-                pauseStartDate = nil
                 if (timer == nil) {
                     return
                 }
-                startDate = nil
                 timer?.invalidate()
                 timer = nil
             }
+        }
+        .onChange(of: lastPomodoroEntryBinder.managedObject) {
+            object in
+            print("Received onChange")
         }
     }
     
@@ -171,8 +192,7 @@ struct TimerView: View {
     }
 
     func updateRemaining() {
-        let elapsed = -startDate!.timeIntervalSinceNow - pauseDuration
-        let newRemaining = Double(seconds) - elapsed
+        let newRemaining = lastPomodoroEntry?.getRemaining() ?? Double(seconds)
         if (abs(newRemaining - Double(remaining - 1)) < 0.5) {
             remaining -= 1
         } else {
