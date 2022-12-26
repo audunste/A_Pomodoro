@@ -38,10 +38,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     {
         let persistenceController = PersistenceController.shared
         let sharedStore = persistenceController.sharedPersistentStore
-        let container = persistenceController.persistentContainer
-        container.acceptShareInvitations(from: [cloudKitShareMetadata], into: sharedStore) { (_, error) in
-            if let error = error {
-                print("\(#function): Failed to accept share invitations: \(error)")
+        if let container = persistenceController.persistentContainer as? NSPersistentCloudKitContainer {
+            container.acceptShareInvitations(from: [cloudKitShareMetadata], into: sharedStore) { (_, error) in
+                if let error = error {
+                    print("\(#function): Failed to accept share invitations: \(error)")
+                }
             }
         }
     }

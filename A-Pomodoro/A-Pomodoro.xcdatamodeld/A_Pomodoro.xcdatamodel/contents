@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21279" systemVersion="22A400" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22C65" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
     <entity name="PomodoroEntry" representedClassName="PomodoroEntry" syncable="YES" codeGenerationType="class">
+        <attribute name="fastForwardDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="pauseDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="pauseSeconds" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="stage" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>

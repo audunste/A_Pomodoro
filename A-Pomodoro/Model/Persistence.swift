@@ -50,7 +50,7 @@ class PersistenceController: NSObject, ObservableObject {
     
     var inMemory: Bool = false
 
-    lazy var persistentContainer: NSPersistentCloudKitContainer = {
+    lazy var persistentContainer: NSPersistentContainer = {
         /**
          Prepare the containing folder for the Core Data stores.
          A Core Data store has companion files, so it's a good practice to put a store under a folder.
@@ -69,7 +69,9 @@ class PersistenceController: NSObject, ObservableObject {
             }
         }
 
-        let container = NSPersistentCloudKitContainer(name: "A-Pomodoro")
+        let container = inMemory
+            ? NSPersistentContainer(name: "A-Pomodoro")
+            : NSPersistentCloudKitContainer(name: "A-Pomodoro")
         
         /**
          Grab the default (first) store and associate it with the CloudKit private database.
@@ -85,31 +87,35 @@ class PersistenceController: NSObject, ObservableObject {
             ? URL(fileURLWithPath: "/dev/null")
             : privateStoreFolderURL.appendingPathComponent("private.sqlite")
         
-        privateStoreDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        privateStoreDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
-        let cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: gCloudKitContainerIdentifier)
-        cloudKitContainerOptions.databaseScope = .private
-        privateStoreDescription.cloudKitContainerOptions = cloudKitContainerOptions
+        if (!inMemory) {
+            privateStoreDescription.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            privateStoreDescription.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+            
+            let cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: gCloudKitContainerIdentifier)
+            cloudKitContainerOptions.databaseScope = .private
+            privateStoreDescription.cloudKitContainerOptions = cloudKitContainerOptions
                 
-        /**
-         Similarly, add a second store and associate it with the CloudKit shared database.
-         */
-        guard let sharedStoreDescription = privateStoreDescription.copy() as? NSPersistentStoreDescription else {
-            fatalError("#\(#function): Copying the private store description returned an unexpected value.")
+            /**
+             Similarly, add a second store and associate it with the CloudKit shared database.
+             */
+            guard let sharedStoreDescription = privateStoreDescription.copy() as? NSPersistentStoreDescription else {
+                fatalError("#\(#function): Copying the private store description returned an unexpected value.")
+            }
+            sharedStoreDescription.url = inMemory
+                ? URL(fileURLWithPath: "/dev/null")
+                : sharedStoreFolderURL.appendingPathComponent("shared.sqlite")
+    
+            let sharedStoreOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: gCloudKitContainerIdentifier)
+            sharedStoreOptions.databaseScope = .shared
+            sharedStoreDescription.cloudKitContainerOptions = sharedStoreOptions
+
+            container.persistentStoreDescriptions.append(sharedStoreDescription)
         }
-        sharedStoreDescription.url = inMemory
-            ? URL(fileURLWithPath: "/dev/null")
-            : sharedStoreFolderURL.appendingPathComponent("shared.sqlite")
-                    
-        let sharedStoreOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: gCloudKitContainerIdentifier)
-        sharedStoreOptions.databaseScope = .shared
-        sharedStoreDescription.cloudKitContainerOptions = sharedStoreOptions
 
         /**
          Load the persistent stores.
          */
-        container.persistentStoreDescriptions.append(sharedStoreDescription)
         container.loadPersistentStores(completionHandler: { (loadedStoreDescription, error) in
             guard error == nil else {
                 fatalError("#\(#function): Failed to load persistent stores:\(error!)")
@@ -123,6 +129,10 @@ class PersistenceController: NSObject, ObservableObject {
                 self._sharedPersistentStore = container.persistentStoreCoordinator.persistentStore(for: loadedStoreDescription.url!)
             }
         })
+        
+        if (inMemory) {
+            return container
+        }
 
         /**
          Run initializeCloudKitSchema() once to update the CloudKit schema every time you change the Core Data model.

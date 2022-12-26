@@ -12,6 +12,9 @@ struct A_PomodoroApp: App {
     @UIApplicationDelegateAdaptor var appDelegate: AppDelegate
     let persistentContainer = PersistenceController.shared.persistentContainer
     @StateObject private var modelData = ModelData()
+    @StateObject private var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
+        container: PersistenceController.shared.persistentContainer,
+        sortKey: "startDate")
 
     init() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
@@ -34,6 +37,7 @@ struct A_PomodoroApp: App {
             ContentView()
                 .environment(\.managedObjectContext, persistentContainer.viewContext)
                 .environmentObject(modelData)
+                .environmentObject(lastPomodoroEntryBinder)
                 .preferredColorScheme(.dark)
         }
         #endif

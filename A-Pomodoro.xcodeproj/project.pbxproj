@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		542AFD0129593C07004B53F9 /* LatestObjectBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */; };
+		542AFD0229593C16004B53F9 /* PomodoroEntry+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */; };
 		5460DF4329549AEB00D00E0E /* Persistence+History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF4229549AEB00D00E0E /* Persistence+History.swift */; };
 		5460DF452954A1C400D00E0E /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF442954A1C400D00E0E /* CoreDataHelper.swift */; };
 		5460DF602954CF4B00D00E0E /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF442954A1C400D00E0E /* CoreDataHelper.swift */; };
@@ -367,8 +369,10 @@
 				5460DF752955A34600D00E0E /* AppDelegate.swift in Sources */,
 				5460DF602954CF4B00D00E0E /* CoreDataHelper.swift in Sources */,
 				5460DF612954CF4B00D00E0E /* Persistence+History.swift in Sources */,
+				542AFD0129593C07004B53F9 /* LatestObjectBinder.swift in Sources */,
 				5460DF622954CF4B00D00E0E /* TimerView.swift in Sources */,
 				5460DF632954CF4B00D00E0E /* A_PomodoroApp.swift in Sources */,
+				542AFD0229593C16004B53F9 /* PomodoroEntry+Util.swift in Sources */,
 				5460DF642954CF4B00D00E0E /* ModelData.swift in Sources */,
 				5460DF652954CF4B00D00E0E /* ContentView.swift in Sources */,
 				5460DF662954CF4B00D00E0E /* AppColor.swift in Sources */,

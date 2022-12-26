@@ -11,7 +11,7 @@ import CloudKit
 /**
  A convenience method for creating background contexts that specify the app as their transaction author.
  */
-extension NSPersistentCloudKitContainer {
+extension NSPersistentContainer {
     func newTaskContext() -> NSManagedObjectContext {
         let context = newBackgroundContext()
         context.transactionAuthor = TransactionAuthor.app

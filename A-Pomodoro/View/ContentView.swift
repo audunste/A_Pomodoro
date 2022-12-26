@@ -79,7 +79,7 @@ struct ContentView: View {
             }
             .onChange(of: focusAndBreakStage) {
                 stage in
-                NSLog("stage = %lld", stage)
+                print("apom stage onChange to = \(stage)")
                 if (stage % 2 == 0) {
                     selection = .pomodoro
                 } else {

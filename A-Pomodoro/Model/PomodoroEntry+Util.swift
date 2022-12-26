@@ -27,4 +27,17 @@ extension PomodoroEntry {
         }
         return getRemaining() > 0
     }
+    
+    var isRunning: Bool {
+        if self.startDate == nil {
+            return false
+        }
+        if self.isPaused {
+            return false
+        }
+        if self.fastForwardDate != nil {
+            return false
+        }
+        return getRemaining() > 0
+    }
 }

@@ -10,14 +10,11 @@ import CoreData
 
 struct TimerView: View {
 
-    static let notificationIdentifier = "Pomodoro"
     static let multiplier: Int32 = 60
     
     @Environment(\.managedObjectContext) private var viewContext
-    @StateObject private var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
-        container: PersistenceController.shared.persistentContainer,
-        sortKey: "startDate")
     @EnvironmentObject var modelData: ModelData
+    @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
     var seconds: Int32
     var timerType: TimerType
     @State var timer: Timer? = nil
@@ -32,24 +29,23 @@ struct TimerView: View {
         _remaining = State(initialValue: seconds)
     }
     
-    private var lastPomodoroEntry: PomodoroEntry? {
-        lastPomodoroEntryBinder.managedObject
+    private var lastPomodoroEntry: PomodoroEntry {
+        lastPomodoroEntryBinder.managedObject ?? PomodoroEntry()
     }
-
+    
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
-            if let lastPomodoroEntry = lastPomodoroEntryBinder.managedObject {
-                Text("Has pomodoro entry \(lastPomodoroEntry.timerType!)")
-            }
             Text(String(format: "%02d:%02d", (remaining / 60), remaining % 60))
             .font(.system(size: 80).monospacedDigit())
             .padding(EdgeInsets(top: 0, leading: 56, bottom: 0, trailing: 56))
             if (timer == nil) {
                 Button {
-                    if (lastPomodoroEntry?.isPaused ?? false) {
-                        let duration = -lastPomodoroEntry!.pauseDate!.timeIntervalSinceNow
-                        lastPomodoroEntry!.pauseSeconds += duration
-                        lastPomodoroEntry!.pauseDate = nil
+                    if lastPomodoroEntry.isPaused
+                        && lastPomodoroEntry.timerType == timerType.rawValue
+                    {
+                        let duration = -lastPomodoroEntry.pauseDate!.timeIntervalSinceNow
+                        lastPomodoroEntry.pauseSeconds += duration
+                        lastPomodoroEntry.pauseDate = nil
                         viewContext.saveAndLogError()
                         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
                             t in
@@ -61,22 +57,11 @@ struct TimerView: View {
                         entry.stage = Int64(getExpectedStage())
                         entry.timerType = timerType.rawValue
                         entry.timeSeconds = Double(seconds)
+                        viewContext.saveAndLogError()
+                        print("apom new \(entry.timerType!)")
                         remaining = seconds - 1
                     }
-                    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true)
-                    { t in
-                        updateRemaining()
-                        if (remaining <= 0) {
-                            finish()
-                            Timer.scheduledTimer(withTimeInterval: 1, repeats: false) {
-                                t in
-                                if (timer == nil) {
-                                    remaining = seconds
-                                }
-                            }
-                        }
-                    }
-                    scheduleNotification()
+                    scheduleTimerAndNotificationIfNeeded()
                     changeStageIfNeeded()
                 } label: {
                     Text("Start")
@@ -91,16 +76,11 @@ struct TimerView: View {
             } else {
                 HStack {
                     Button {
-                        timer!.invalidate()
-                        timer = nil
-                        if let entry = lastPomodoroEntry {
-                            if entry.stage == focusAndBreakStage {
-                                viewContext.delete(entry)
-                                viewContext.saveAndLogError()
-                            }
+                        stopTimerAndCancelNotificationIfNeeded()
+                        if lastPomodoroEntry.stage == focusAndBreakStage {
+                            viewContext.delete(lastPomodoroEntry)
+                            viewContext.saveAndLogError()
                         }
-                        remaining = seconds
-                        cancelNotification()
                     } label: {
                         Image(systemName: "backward.end")
                             .resizable()
@@ -109,13 +89,9 @@ struct TimerView: View {
                             .colorMultiply(modelData.appColor.textColor)
                     }
                     Button {
-                        if let entry = lastPomodoroEntry {
-                            entry.pauseDate = Date()
-                            viewContext.saveAndLogError()
-                        }
-                        timer!.invalidate()
-                        timer = nil
-                        cancelNotification()
+                        lastPomodoroEntry.pauseDate = Date()
+                        viewContext.saveAndLogError()
+                        stopTimerAndCancelNotificationIfNeeded()
                     } label: {
                         Text("Pause")
                             .frame(maxWidth: .infinity)
@@ -125,9 +101,11 @@ struct TimerView: View {
                     .buttonStyle(.borderedProminent)
                     .font(.system(size: 30))
                     Button {
-                        cancelNotification()
+                        lastPomodoroEntry.fastForwardDate = Date()
+                        viewContext.saveAndLogError()
+                        stopTimerAndCancelNotificationIfNeeded()
                         remaining = seconds
-                        finish()
+                        goToNextStage()
                     } label: {
                         Image(systemName: "forward.end")
                             .resizable()
@@ -143,17 +121,53 @@ struct TimerView: View {
             stage in
             if (getExpectedStage() != stage) {
                 remaining = seconds
-                if (timer == nil) {
-                    return
-                }
-                timer?.invalidate()
-                timer = nil
+                stopTimerAndCancelNotificationIfNeeded()
             }
         }
-        .onChange(of: lastPomodoroEntryBinder.managedObject) {
-            object in
-            print("Received onChange")
+        .onChange(of: lastPomodoroEntry) {
+            entry in
+            guard isThisViewRelevantForLastPomodoroEntry else {
+                return
+            }
+            print("apom lastPomodoroEntry onChange \(lastPomodoroEntry.timerType!)")
+            if focusAndBreakStage != entry.stage {
+                print("apom setStage \(entry.stage), was \(focusAndBreakStage)")
+                focusAndBreakStage = Int(entry.stage)
+            }
+            if !entry.isRunning {
+                return
+            }
+            scheduleTimerAndNotificationIfNeeded()
         }
+        .onChange(of: lastPomodoroEntry.fastForwardDate) {
+            date in
+            guard date != nil && isThisViewRelevantForLastPomodoroEntry else {
+                return
+            }
+            if (timer == nil) {
+                return
+            }
+            stopTimerAndCancelNotificationIfNeeded()
+            remaining = seconds
+            goToNextStage()
+        }
+        .onChange(of: lastPomodoroEntry.pauseDate) {
+            date in
+            guard isThisViewRelevantForLastPomodoroEntry else {
+                return
+            }
+            if date == nil {
+                if lastPomodoroEntry.isRunning {
+                    scheduleTimerAndNotificationIfNeeded()
+                }
+            } else {
+                stopTimerAndCancelNotificationIfNeeded()
+            }
+        }
+    }
+    
+    var isThisViewRelevantForLastPomodoroEntry: Bool {
+        lastPomodoroEntry.timerType ?? "nil" == timerType.rawValue
     }
     
     func getExpectedStage() -> Int {
@@ -192,7 +206,8 @@ struct TimerView: View {
     }
 
     func updateRemaining() {
-        let newRemaining = lastPomodoroEntry?.getRemaining() ?? Double(seconds)
+        let newRemaining = lastPomodoroEntry.getRemaining()
+        print("apom updateRemaining \(timerType) \(lastPomodoroEntry.timerType ?? "nil")")
         if (abs(newRemaining - Double(remaining - 1)) < 0.5) {
             remaining -= 1
         } else {
@@ -208,7 +223,24 @@ struct TimerView: View {
         }
     }
     
-    func scheduleNotification() {
+    func scheduleTimerAndNotificationIfNeeded() {
+        if timer != nil {
+            return
+        }
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true)
+        { t in
+            updateRemaining()
+            if (remaining <= 0) {
+                goToNextStage()
+                Timer.scheduledTimer(withTimeInterval: 1, repeats: false) {
+                    t in
+                    if (timer == nil) {
+                        remaining = seconds
+                    }
+                }
+            }
+        }
+        
         let content = UNMutableNotificationContent()
         switch (timerType) {
         case .pomodoro:
@@ -221,26 +253,37 @@ struct TimerView: View {
         content.sound = UNNotificationSound.default
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(remaining), repeats: false)
-        let request = UNNotificationRequest(identifier: TimerView.notificationIdentifier, content: content, trigger: trigger)
+        let request = UNNotificationRequest(identifier: timerType.rawValue, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request)
     }
     
-    func cancelNotification() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    func stopTimerAndCancelNotificationIfNeeded() {
+        if (timer == nil) {
+            return
+        }
+        
+        timer!.invalidate()
+        timer = nil
+
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
     }
     
-    func finish() {
-        NSLog("finish in \(timerType)")
+    func goToNextStage() {
+        print("apom goToNextStage in \(timerType)")
         focusAndBreakStage += 1
     }
 }
 
 struct TimerView_Previews: PreviewProvider {
     static var modelData = ModelData()
+    static var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
+        container: PersistenceController.preview.persistentContainer,
+        sortKey: "startDate")
     
     static var previews: some View {
         TimerView(25, timerType: .pomodoro)
             .environmentObject(modelData)
+            .environmentObject(lastPomodoroEntryBinder)
             .background(modelData.appColor.backgroundColor)
             .foregroundColor(.white)
     }
