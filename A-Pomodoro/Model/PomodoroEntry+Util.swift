@@ -14,7 +14,7 @@ extension PomodoroEntry {
             return 0
         }
         let stopDate = self.pauseDate ?? date
-        let elapsed = -startDate.timeIntervalSince(stopDate) - self.pauseSeconds
+        let elapsed = -startDate.timeIntervalSince(stopDate) - self.pauseSeconds - self.adjustmentSeconds
         return max(0.0, self.timeSeconds - elapsed)
     }
     

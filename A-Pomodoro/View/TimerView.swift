@@ -77,10 +77,10 @@ struct TimerView: View {
                 HStack {
                     Button {
                         stopTimerAndCancelNotificationIfNeeded()
-                        if lastPomodoroEntry.stage == focusAndBreakStage {
-                            viewContext.delete(lastPomodoroEntry)
-                            viewContext.saveAndLogError()
-                        }
+                        lastPomodoroEntry.pauseDate = Date()
+                        lastPomodoroEntry.adjustmentSeconds += Double(seconds) - lastPomodoroEntry.getRemaining()
+                        viewContext.saveAndLogError()
+                        updateRemaining()
                     } label: {
                         Image(systemName: "backward.end")
                             .resizable()
@@ -162,6 +162,7 @@ struct TimerView: View {
                 }
             } else {
                 stopTimerAndCancelNotificationIfNeeded()
+                updateRemaining()
             }
         }
     }
