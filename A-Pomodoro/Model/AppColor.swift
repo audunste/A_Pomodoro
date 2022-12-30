@@ -10,39 +10,34 @@ import SwiftUI
 struct AppColor {
     var backgroundColor: Color
     var accentColor: Color
+    var accentColor2: Color
     var textColor: Color
     
-    init(_ backgroundColor: Color, _ accentColor: Color, textColor: Color = .white) {
-        self.backgroundColor = backgroundColor
-        self.accentColor = accentColor
-        self.textColor = textColor
+    init(hue: Double, saturation: Double, b1: Double, b2: Double,
+        textWhite: Double = 1.0)
+    {
+        self.backgroundColor = Color(hue: hue, saturation: saturation, brightness: b1)
+        self.accentColor = Color(hue: hue, saturation: saturation, brightness: b2)
+        self.accentColor2 = Color(hue: hue, saturation: saturation, brightness: 0.5 * (b1 + b2))
+        self.textColor = Color(white: textWhite)
     }
     
     static let pomodoroLight = AppColor(
-        Color(hue: 0.02, saturation: 0.64, brightness: 0.8),
-        Color(hue: 0.02, saturation: 0.64, brightness: 1.0))
+        hue: 0.02, saturation: 0.64, b1: 0.8, b2: 1.0)
     
     static let pomodoroDark = AppColor(
-        Color(hue: 0.02, saturation: 0.64, brightness: 0.7),
-        Color(hue: 0.02, saturation: 0.64, brightness: 0.9),
-        textColor: Color(white: 0.95))
+        hue: 0.02, saturation: 0.64, b1: 0.7, b2: 0.9, textWhite: 0.95)
 
     static let shortBreakLight = AppColor(
-        Color(hue: 0.32, saturation: 0.60, brightness: 0.54),
-        Color(hue: 0.32, saturation: 0.60, brightness: 0.74))
+        hue: 0.32, saturation: 0.60, b1: 0.54, b2: 0.74)
 
     static let shortBreakDark = AppColor(
-        Color(hue: 0.32, saturation: 0.60, brightness: 0.46),
-        Color(hue: 0.32, saturation: 0.60, brightness: 0.66),
-        textColor: Color(white: 0.95))
+        hue: 0.32, saturation: 0.60, b1: 0.46, b2: 0.66, textWhite: 0.95)
 
     static let longBreakLight = AppColor(
-        Color(hue: 0.58, saturation: 0.67, brightness: 0.58),
-        Color(hue: 0.58, saturation: 0.67, brightness: 0.78))
+        hue: 0.58, saturation: 0.67, b1: 0.58, b2: 0.78)
 
     static let longBreakDark = AppColor(
-        Color(hue: 0.58, saturation: 0.67, brightness: 0.48),
-        Color(hue: 0.58, saturation: 0.67, brightness: 0.68),
-        textColor: Color(white: 0.95))
+        hue: 0.58, saturation: 0.67, b1: 0.48, b2: 0.68, textWhite: 0.95)
 
 }

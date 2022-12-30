@@ -26,8 +26,8 @@ struct ContentView: View {
                     TimerView(15, timerType: .longBreak)
                         .tag(TimerType.longBreak)
                 }
-                .foregroundColor(.white)
-                .tabViewStyle(.page)
+                .foregroundColor(modelData.appColor.textColor)
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 HStack {
                     Button {
                         selection = .pomodoro
@@ -37,7 +37,7 @@ struct ContentView: View {
                         .padding(.top, 4)
                     }
                     .tint(modelData.appColor.accentColor)
-                    .foregroundColor(.white)
+                    .foregroundColor(modelData.appColor.textColor)
                     .buttonStyleFor(selected: selection == .pomodoro)
                     .contentShape(Rectangle())
                     Button {
@@ -48,7 +48,7 @@ struct ContentView: View {
                         .padding(.top, 4)
                     }
                     .tint(modelData.appColor.accentColor)
-                    .foregroundColor(.white)
+                    .foregroundColor(modelData.appColor.textColor)
                     .buttonStyleFor(selected: selection == .shortBreak)
                     .contentShape(Rectangle())
                     Button {
@@ -59,7 +59,7 @@ struct ContentView: View {
                         .padding(.top, 4)
                     }
                     .tint(modelData.appColor.accentColor)
-                    .foregroundColor(.white)
+                    .foregroundColor(modelData.appColor.textColor)
                     .buttonStyleFor(selected: selection == .longBreak)
                     .contentShape(Rectangle())
                 }
@@ -132,16 +132,54 @@ extension View {
     @ViewBuilder
     func buttonStyleFor(selected: Bool) -> some View {
         if (selected) {
-            buttonStyle(.borderedProminent)
+            buttonStyle(SelectedButton())
         } else {
-            buttonStyle(.bordered)
+            buttonStyle(NormalButton())
         }
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-            .environmentObject(ModelData())
+struct PreviewModifier: ViewModifier {
+    let device: String
+    var modelData = ModelData()
+    var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
+        container: PersistenceController.preview.persistentContainer,
+        sortKey: "startDate")
+        
+    func body(content: Content) -> some View {
+        content
+        .environmentObject(modelData)
+        .environmentObject(lastPomodoroEntryBinder)
+        .background(modelData.appColor.backgroundColor)
+        .foregroundColor(modelData.appColor.textColor)
+        .previewDevice(PreviewDevice(rawValue: device))
+        .previewDisplayName(device)
     }
 }
+
+extension View {
+    func withPreviewEnvironment(_ device: String) -> some View {
+        self.modifier(PreviewModifier(device: device))
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    
+    static var previews: some View {
+        ContentView()
+        .previewDisplayName("SE portrait")
+        .withPreviewEnvironment("iPhone SE (3rd generation)")
+        
+        ContentView()
+        .previewDisplayName("SE landscape")
+        .withPreviewEnvironment("iPhone SE (3rd generation)")
+        .previewInterfaceOrientation(.landscapeLeft)
+        
+        ContentView()
+        .withPreviewEnvironment("iPhone 14 Pro Max")
+        
+        ContentView()
+        .withPreviewEnvironment("iPad (10th generation)")
+    }
+}
+

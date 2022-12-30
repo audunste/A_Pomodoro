@@ -9,6 +9,11 @@
 /* Begin PBXBuildFile section */
 		542AFD0129593C07004B53F9 /* LatestObjectBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */; };
 		542AFD0229593C16004B53F9 /* PomodoroEntry+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */; };
+		542AFD04295A4F7C004B53F9 /* SquareZStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD03295A4F7C004B53F9 /* SquareZStack.swift */; };
+		542AFD06295A8F59004B53F9 /* ProgressBow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD05295A8F59004B53F9 /* ProgressBow.swift */; };
+		542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD07295BAC6F004B53F9 /* ProgressText.swift */; };
+		542AFD0A295C87EA004B53F9 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD09295C87EA004B53F9 /* ButtonStyles.swift */; };
+		542AFD0E295E8349004B53F9 /* ViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD0D295E8349004B53F9 /* ViewUtil.swift */; };
 		5460DF4329549AEB00D00E0E /* Persistence+History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF4229549AEB00D00E0E /* Persistence+History.swift */; };
 		5460DF452954A1C400D00E0E /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF442954A1C400D00E0E /* CoreDataHelper.swift */; };
 		5460DF602954CF4B00D00E0E /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF442954A1C400D00E0E /* CoreDataHelper.swift */; };
@@ -61,6 +66,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		542AFD03295A4F7C004B53F9 /* SquareZStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquareZStack.swift; sourceTree = "<group>"; };
+		542AFD05295A8F59004B53F9 /* ProgressBow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBow.swift; sourceTree = "<group>"; };
+		542AFD07295BAC6F004B53F9 /* ProgressText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressText.swift; sourceTree = "<group>"; };
+		542AFD09295C87EA004B53F9 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
+		542AFD0D295E8349004B53F9 /* ViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtil.swift; sourceTree = "<group>"; };
 		5460DF4229549AEB00D00E0E /* Persistence+History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+History.swift"; sourceTree = "<group>"; };
 		5460DF442954A1C400D00E0E /* CoreDataHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataHelper.swift; sourceTree = "<group>"; };
 		5460DF712954CF4B00D00E0E /* InitializeCloudKitSchema.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InitializeCloudKitSchema.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -189,6 +199,11 @@
 			children = (
 				5467546F295334FB00EA7F5E /* ContentView.swift */,
 				5467546E295334FB00EA7F5E /* TimerView.swift */,
+				542AFD03295A4F7C004B53F9 /* SquareZStack.swift */,
+				542AFD05295A8F59004B53F9 /* ProgressBow.swift */,
+				542AFD07295BAC6F004B53F9 /* ProgressText.swift */,
+				542AFD09295C87EA004B53F9 /* ButtonStyles.swift */,
+				542AFD0D295E8349004B53F9 /* ViewUtil.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -389,13 +404,18 @@
 				5460DF7429552C2C00D00E0E /* AppDelegate.swift in Sources */,
 				5460DF452954A1C400D00E0E /* CoreDataHelper.swift in Sources */,
 				5460DF4329549AEB00D00E0E /* Persistence+History.swift in Sources */,
+				542AFD04295A4F7C004B53F9 /* SquareZStack.swift in Sources */,
 				54675470295334FB00EA7F5E /* TimerView.swift in Sources */,
+				542AFD0E295E8349004B53F9 /* ViewUtil.swift in Sources */,
 				5467543C2953343800EA7F5E /* A_PomodoroApp.swift in Sources */,
 				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
+				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
 				546754772953350700EA7F5E /* ModelData.swift in Sources */,
 				54675471295334FB00EA7F5E /* ContentView.swift in Sources */,
+				542AFD06295A8F59004B53F9 /* ProgressBow.swift in Sources */,
 				5460DF772955A89100D00E0E /* Persistence+PomodoroEntry.swift in Sources */,
 				546754752953350700EA7F5E /* AppColor.swift in Sources */,
+				542AFD0A295C87EA004B53F9 /* ButtonStyles.swift in Sources */,
 				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
 				5467543E2953343800EA7F5E /* Persistence.swift in Sources */,
 				546754762953350700EA7F5E /* TimerType.swift in Sources */,

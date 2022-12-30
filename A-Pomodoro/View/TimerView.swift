@@ -22,6 +22,8 @@ struct TimerView: View {
 
     // calculated
     @State var remaining: Int32
+    // temporary adjustment value
+    @State var tempRemaining: Int32?
 
     init(_ minutes: Int32, timerType: TimerType) {
         seconds = minutes * TimerView.multiplier
@@ -33,90 +35,36 @@ struct TimerView: View {
         lastPomodoroEntryBinder.managedObject ?? PomodoroEntry()
     }
     
+    var displayedRemaining: Int32 {
+        tempRemaining ?? remaining
+    }
+
+    
     var body: some View {
-        VStack(alignment: .center, spacing: 16) {
-            Text(String(format: "%02d:%02d", (remaining / 60), remaining % 60))
-            .font(.system(size: 80).monospacedDigit())
-            .padding(EdgeInsets(top: 0, leading: 56, bottom: 0, trailing: 56))
-            if (timer == nil) {
-                Button {
-                    if lastPomodoroEntry.isPaused
-                        && lastPomodoroEntry.timerType == timerType.rawValue
-                    {
-                        let duration = -lastPomodoroEntry.pauseDate!.timeIntervalSinceNow
-                        lastPomodoroEntry.pauseSeconds += duration
-                        lastPomodoroEntry.pauseDate = nil
-                        viewContext.saveAndLogError()
-                        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
-                            t in
-                            updateRemaining()
-                        }
-                    } else {
-                        let entry = PomodoroEntry(context: viewContext)
-                        entry.startDate = Date()
-                        entry.stage = Int64(getExpectedStage())
-                        entry.timerType = timerType.rawValue
-                        entry.timeSeconds = Double(seconds)
-                        viewContext.saveAndLogError()
-                        print("apom new \(entry.timerType!)")
-                        remaining = seconds - 1
-                    }
-                    scheduleTimerAndNotificationIfNeeded()
-                    changeStageIfNeeded()
-                } label: {
-                    Text("Start")
-                        .frame(maxWidth: .infinity)
+        SquareZStack {
+            ProgressText(remaining: displayedRemaining)
+            ProgressBow(buttonText: timer == nil ? "Start" : "Pause", remaining: remaining, total: seconds, tempRemaining: $tempRemaining, adjustmentHandler:
+            {
+                newRemaining in
+                    if isThisViewRelevantForLastPomodoroEntry {
+                    lastPomodoroEntry.adjustmentSeconds += 0.25 + Double(newRemaining) - lastPomodoroEntry.getRemaining()
+                    viewContext.saveAndLogError()
+                    updateRemaining()
+                } else if newRemaining != remaining {
+                    let entry = PomodoroEntry(context: viewContext)
+                    entry.startDate = Date()
+                    entry.stage = Int64(getExpectedStage())
+                    entry.timerType = timerType.rawValue
+                    entry.timeSeconds = Double(seconds)
+                    entry.pauseDate = entry.startDate
+                    entry.adjustmentSeconds += Double(newRemaining) - Double(remaining)
+                    viewContext.saveAndLogError()
+                    print("apom new \(entry.timerType!)")
+                    remaining = newRemaining
                 }
-                .frame(maxWidth: .infinity)
-                .tint(modelData.appColor.accentColor)
-                .foregroundColor(.white)
-                .buttonStyle(.borderedProminent)
-                .font(.system(size: 30))
-                .padding(EdgeInsets(top: 0, leading: 56, bottom: 0, trailing: 56))
-            } else {
-                HStack {
-                    Button {
-                        stopTimerAndCancelNotificationIfNeeded()
-                        lastPomodoroEntry.pauseDate = Date()
-                        lastPomodoroEntry.adjustmentSeconds += Double(seconds) - lastPomodoroEntry.getRemaining()
-                        viewContext.saveAndLogError()
-                        updateRemaining()
-                    } label: {
-                        Image(systemName: "backward.end")
-                            .resizable()
-                            .frame(width: 24, height: 24)
-                            .padding(12)
-                            .colorMultiply(modelData.appColor.textColor)
-                    }
-                    Button {
-                        lastPomodoroEntry.pauseDate = Date()
-                        viewContext.saveAndLogError()
-                        stopTimerAndCancelNotificationIfNeeded()
-                    } label: {
-                        Text("Pause")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .tint(modelData.appColor.accentColor)
-                    .foregroundColor(.white)
-                    .buttonStyle(.borderedProminent)
-                    .font(.system(size: 30))
-                    Button {
-                        lastPomodoroEntry.fastForwardDate = Date()
-                        viewContext.saveAndLogError()
-                        stopTimerAndCancelNotificationIfNeeded()
-                        remaining = seconds
-                        goToNextStage()
-                    } label: {
-                        Image(systemName: "forward.end")
-                            .resizable()
-                            .frame(width: 24, height: 24)
-                            .padding(12)
-                            .colorMultiply(modelData.appColor.textColor)
-                    }
-                }
-            }
+            }, actionHandler: self.togglePlay)
         }
-        .fixedSize(horizontal: true, vertical: false)
+        .frame(maxWidth: 430, maxHeight: 430)
         .onChange(of: focusAndBreakStage) {
             stage in
             if (getExpectedStage() != stage) {
@@ -169,6 +117,38 @@ struct TimerView: View {
     
     var isThisViewRelevantForLastPomodoroEntry: Bool {
         lastPomodoroEntry.timerType ?? "nil" == timerType.rawValue
+    }
+    
+    func togglePlay() {
+        if timer == nil {
+            if lastPomodoroEntry.isPaused
+                && lastPomodoroEntry.timerType == timerType.rawValue
+            {
+                let duration = -lastPomodoroEntry.pauseDate!.timeIntervalSinceNow
+                lastPomodoroEntry.pauseSeconds += duration
+                lastPomodoroEntry.pauseDate = nil
+                viewContext.saveAndLogError()
+                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
+                    t in
+                    updateRemaining()
+                }
+            } else {
+                let entry = PomodoroEntry(context: viewContext)
+                entry.startDate = Date()
+                entry.stage = Int64(getExpectedStage())
+                entry.timerType = timerType.rawValue
+                entry.timeSeconds = Double(seconds)
+                viewContext.saveAndLogError()
+                print("apom new \(entry.timerType!)")
+                remaining = seconds - 1
+            }
+            scheduleTimerAndNotificationIfNeeded()
+            changeStageIfNeeded()
+        } else {
+            lastPomodoroEntry.pauseDate = Date()
+            viewContext.saveAndLogError()
+            stopTimerAndCancelNotificationIfNeeded()
+        }
     }
     
     func getExpectedStage() -> Int {
@@ -283,9 +263,18 @@ struct TimerView_Previews: PreviewProvider {
     
     static var previews: some View {
         TimerView(25, timerType: .pomodoro)
-            .environmentObject(modelData)
-            .environmentObject(lastPomodoroEntryBinder)
-            .background(modelData.appColor.backgroundColor)
-            .foregroundColor(.white)
+        .previewDisplayName("SE portrait")
+        .withPreviewEnvironment("iPhone SE (3rd generation)")
+
+        TimerView(5, timerType: .shortBreak)
+        .previewDisplayName("SE landscape")
+        .withPreviewEnvironment("iPhone SE (3rd generation)")
+        .previewInterfaceOrientation(.landscapeLeft)
+        
+        TimerView(25, timerType: .pomodoro)
+        .withPreviewEnvironment("iPhone 14 Pro Max")
+        
+        TimerView(25, timerType: .pomodoro)
+        .withPreviewEnvironment("iPad (10th generation)")
     }
 }
