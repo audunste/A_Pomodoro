@@ -31,8 +31,16 @@ struct TimerView: View {
         _remaining = State(initialValue: seconds)
     }
     
-    private var lastPomodoroEntry: PomodoroEntry {
-        lastPomodoroEntryBinder.managedObject ?? PomodoroEntry()
+    private var lastPomodoroEntry: PomodoroEntry? {
+        lastPomodoroEntryBinder.managedObject
+    }
+    
+    private var fastForwardDate: Date? {
+        lastPomodoroEntryBinder.managedObject?.fastForwardDate
+    }
+    
+    private var pauseDate: Date? {
+        lastPomodoroEntryBinder.managedObject?.pauseDate
     }
     
     var displayedRemaining: Int32 {
@@ -46,7 +54,7 @@ struct TimerView: View {
             ProgressBow(buttonText: timer == nil ? "Start" : "Pause", remaining: remaining, total: seconds, tempRemaining: $tempRemaining, adjustmentHandler:
             {
                 newRemaining in
-                    if isThisViewRelevantForLastPomodoroEntry {
+                if let lastPomodoroEntry = relevantLastPomodoroEntryOrNil {
                     lastPomodoroEntry.adjustmentSeconds += 0.25 + Double(newRemaining) - lastPomodoroEntry.getRemaining()
                     viewContext.saveAndLogError()
                     updateRemaining()
@@ -67,17 +75,21 @@ struct TimerView: View {
         .frame(maxWidth: 430, maxHeight: 430)
         .onChange(of: focusAndBreakStage) {
             stage in
+            let stage = max(0, stage)
             if (getExpectedStage() != stage) {
                 remaining = seconds
                 stopTimerAndCancelNotificationIfNeeded()
+            } else {
+                print("apom maybe start \(timerType)")
             }
         }
         .onChange(of: lastPomodoroEntry) {
             entry in
-            guard isThisViewRelevantForLastPomodoroEntry else {
+            guard let entry = entry else {
+                print("apom lastPomodoroEntry is nil in onChange")
                 return
             }
-            print("apom lastPomodoroEntry onChange \(lastPomodoroEntry.timerType!)")
+            print("apom lastPomodoroEntry onChange \(String(describing: entry.timerType))")
             if focusAndBreakStage != entry.stage {
                 print("apom setStage \(entry.stage), was \(focusAndBreakStage)")
                 focusAndBreakStage = Int(entry.stage)
@@ -85,9 +97,11 @@ struct TimerView: View {
             if !entry.isRunning {
                 return
             }
-            scheduleTimerAndNotificationIfNeeded()
+            if entry.timerType ?? "nil" == timerType.rawValue {
+                scheduleTimerAndNotificationIfNeeded()
+            }
         }
-        .onChange(of: lastPomodoroEntry.fastForwardDate) {
+        .onChange(of: fastForwardDate) {
             date in
             guard date != nil && isThisViewRelevantForLastPomodoroEntry else {
                 return
@@ -99,9 +113,9 @@ struct TimerView: View {
             remaining = seconds
             goToNextStage()
         }
-        .onChange(of: lastPomodoroEntry.pauseDate) {
+        .onChange(of: pauseDate) {
             date in
-            guard isThisViewRelevantForLastPomodoroEntry else {
+            guard let lastPomodoroEntry = relevantLastPomodoroEntryOrNil else {
                 return
             }
             if date == nil {
@@ -113,13 +127,38 @@ struct TimerView: View {
                 updateRemaining()
             }
         }
+        .onAppear() {
+            guard let lastPomodoroEntry = relevantLastPomodoroEntryOrNil else {
+                return
+            }
+            if lastPomodoroEntry.isRunning {
+                updateRemaining()
+                scheduleTimerAndNotificationIfNeeded()
+            }
+        }
+    }
+    
+    var relevantLastPomodoroEntryOrNil: PomodoroEntry? {
+        if isThisViewRelevantForLastPomodoroEntry {
+            return lastPomodoroEntry!
+        }
+        return nil
     }
     
     var isThisViewRelevantForLastPomodoroEntry: Bool {
-        lastPomodoroEntry.timerType ?? "nil" == timerType.rawValue
+        guard let lastPomodoroEntry = lastPomodoroEntry else {
+            return false
+        }
+        return lastPomodoroEntry.timerType ?? "nil" == timerType.rawValue
+    }
+    
+    func maybeHandleNewPomodoroEntry() {
     }
     
     func togglePlay() {
+        guard let lastPomodoroEntry = lastPomodoroEntry else {
+            return
+        }
         if timer == nil {
             if lastPomodoroEntry.isPaused
                 && lastPomodoroEntry.timerType == timerType.rawValue
@@ -187,6 +226,9 @@ struct TimerView: View {
     }
 
     func updateRemaining() {
+        guard let lastPomodoroEntry = relevantLastPomodoroEntryOrNil else {
+            return
+        }
         let newRemaining = lastPomodoroEntry.getRemaining()
         print("apom updateRemaining \(timerType) \(lastPomodoroEntry.timerType ?? "nil")")
         if (abs(newRemaining - Double(remaining - 1)) < 0.5) {
@@ -222,6 +264,9 @@ struct TimerView: View {
             }
         }
         
+        if (remaining <= 1) {
+            return
+        }
         let content = UNMutableNotificationContent()
         switch (timerType) {
         case .pomodoro:

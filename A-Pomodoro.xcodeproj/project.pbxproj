@@ -131,6 +131,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		542AFD0F295FB9ED004B53F9 /* AppIcon */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = AppIcon;
+			sourceTree = "<group>";
+		};
 		5467542F2953343800EA7F5E = {
 			isa = PBXGroup;
 			children = (
@@ -156,6 +163,7 @@
 		5467543A2953343800EA7F5E /* A-Pomodoro */ = {
 			isa = PBXGroup;
 			children = (
+				542AFD0F295FB9ED004B53F9 /* AppIcon */,
 				5467546D295334E700EA7F5E /* Model */,
 				5467546C295334DB00EA7F5E /* View */,
 				5467546B295334D200EA7F5E /* Info.plist */,
@@ -647,6 +655,7 @@
 		546754632953343A00EA7F5E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "iOSAppIconGreen iOSAppIconBlue";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "A-Pomodoro/A_Pomodoro.entitlements";
@@ -686,6 +695,7 @@
 		546754642953343A00EA7F5E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "iOSAppIconGreen iOSAppIconBlue";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "A-Pomodoro/A_Pomodoro.entitlements";

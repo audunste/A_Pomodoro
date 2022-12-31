@@ -10,9 +10,10 @@ import SwiftUI
 struct ContentView: View {
 
     @EnvironmentObject var modelData: ModelData
+    @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
     @Environment(\.colorScheme) private var colorScheme
     @State private var selection: TimerType = .pomodoro
-    @AppStorage("focusAndBreakStage") private var focusAndBreakStage = 0
+    @AppStorage("focusAndBreakStage") private var focusAndBreakStage = -1
     @AppStorage("lastStageChangeTimestamp") private var lastStageChangeTimestamp = Date().timeIntervalSince1970
         
     var body: some View {
@@ -74,23 +75,34 @@ struct ContentView: View {
                 let timeSinceStageChange = Date().timeIntervalSince1970 - lastStageChangeTimestamp
                 if (timeSinceStageChange > 60 * 45) {
                     NSLog("Resetting stage because long time since last stage change")
-                    focusAndBreakStage = 0
+                    focusAndBreakStage = -1
+                } else {
+                    print("apom man obj = \(String(describing: lastPomodoroEntryBinder.managedObject))")
+                    if let entry = lastPomodoroEntryBinder.managedObject {
+                        print("apom setting focusAndBreakStage to \(entry.stage)")
+                        focusAndBreakStage = Int(entry.stage)
+                        updateSelection(stage: focusAndBreakStage)
+                    }
                 }
             }
             .onChange(of: focusAndBreakStage) {
                 stage in
-                print("apom stage onChange to = \(stage)")
-                if (stage % 2 == 0) {
-                    selection = .pomodoro
-                } else {
-                    switch (stage / 2 % 4) {
-                    case 0...2:
-                        selection = .shortBreak
-                    case 3, _:
-                        selection = .longBreak
-                    }
-                }
+                updateSelection(stage: stage)
+            }
         }
+    }
+    
+    func updateSelection(stage: Int) {
+        print("apom stage onChange to = \(stage)")
+        if (stage % 2 == 0) {
+            selection = .pomodoro
+        } else {
+            switch (stage / 2 % 4) {
+            case 0...2:
+                selection = .shortBreak
+            case 3, _:
+                selection = .longBreak
+            }
         }
     }
     
