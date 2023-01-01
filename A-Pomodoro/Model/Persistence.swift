@@ -140,7 +140,9 @@ class PersistenceController: NSObject, ObservableObject {
          */
         #if InitializeCloudKitSchema
         do {
-            try container.initializeCloudKitSchema()
+            if let container = container as? NSPersistentCloudKitContainer {
+                try container.initializeCloudKitSchema()
+            }
         } catch {
             print("\(#function): initializeCloudKitSchema: \(error)")
         }
