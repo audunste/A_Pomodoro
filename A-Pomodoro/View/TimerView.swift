@@ -58,6 +58,7 @@ struct TimerView: View {
                     lastPomodoroEntry.adjustmentSeconds += 0.25 + Double(newRemaining) - lastPomodoroEntry.getRemaining()
                     viewContext.saveAndLogError()
                     updateRemaining()
+                    updateNotification()
                 } else if newRemaining != remaining {
                     let entry = PomodoroEntry(context: viewContext)
                     entry.startDate = Date()
@@ -264,7 +265,11 @@ struct TimerView: View {
             }
         }
         
-        if (remaining <= 1) {
+        scheduleNotificationIfNeeded()
+    }
+    
+    func scheduleNotificationIfNeeded() {
+        if (remaining <= 1 || timer == nil) {
             return
         }
         #if os(iOS)
@@ -285,6 +290,7 @@ struct TimerView: View {
         #else
         // TODO mac notification
         #endif
+    
     }
     
     func stopTimerAndCancelNotificationIfNeeded() {
@@ -298,6 +304,11 @@ struct TimerView: View {
         #if os(iOS)
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
         #endif
+    }
+    
+    func updateNotification() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
+        scheduleNotificationIfNeeded()
     }
     
     func goToNextStage() {
