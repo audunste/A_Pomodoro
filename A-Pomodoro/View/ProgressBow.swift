@@ -111,7 +111,7 @@ struct ProgressBow: View {
             .foregroundColor(modelData.appColor.textColor)
             .buttonStyle(ProminentButton())
             .contentShape(Rectangle())
-            .position(x: cx, y: startPosition.y)
+            .position(x: cx, y: startPosition.y + 0.025 * w)
             
             //.overlay(
             //    knob
