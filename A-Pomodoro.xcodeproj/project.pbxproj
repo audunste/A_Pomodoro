@@ -46,6 +46,9 @@
 		546754752953350700EA7F5E /* AppColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546754722953350600EA7F5E /* AppColor.swift */; };
 		546754762953350700EA7F5E /* TimerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546754732953350600EA7F5E /* TimerType.swift */; };
 		546754772953350700EA7F5E /* ModelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546754742953350700EA7F5E /* ModelData.swift */; };
+		547F632B296148F3008A83A5 /* Sparkle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632A296148F3008A83A5 /* Sparkle.swift */; };
+		547F632D29614980008A83A5 /* SparkleSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632C29614980008A83A5 /* SparkleSystem.swift */; };
+		547F632F2961516C008A83A5 /* MiscUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632E2961516C008A83A5 /* MiscUtil.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -100,6 +103,9 @@
 		546754722953350600EA7F5E /* AppColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppColor.swift; sourceTree = "<group>"; };
 		546754732953350600EA7F5E /* TimerType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimerType.swift; sourceTree = "<group>"; };
 		546754742953350700EA7F5E /* ModelData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModelData.swift; sourceTree = "<group>"; };
+		547F632A296148F3008A83A5 /* Sparkle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sparkle.swift; sourceTree = "<group>"; };
+		547F632C29614980008A83A5 /* SparkleSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleSystem.swift; sourceTree = "<group>"; };
+		547F632E2961516C008A83A5 /* MiscUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiscUtil.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,6 +231,8 @@
 				542AFD07295BAC6F004B53F9 /* ProgressText.swift */,
 				542AFD09295C87EA004B53F9 /* ButtonStyles.swift */,
 				542AFD0D295E8349004B53F9 /* ViewUtil.swift */,
+				547F632A296148F3008A83A5 /* Sparkle.swift */,
+				547F632C29614980008A83A5 /* SparkleSystem.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -241,6 +249,7 @@
 				5460DF442954A1C400D00E0E /* CoreDataHelper.swift */,
 				5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */,
 				5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */,
+				547F632E2961516C008A83A5 /* MiscUtil.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -433,7 +442,10 @@
 				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
 				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
 				546754772953350700EA7F5E /* ModelData.swift in Sources */,
+				547F632B296148F3008A83A5 /* Sparkle.swift in Sources */,
 				54675471295334FB00EA7F5E /* ContentView.swift in Sources */,
+				547F632D29614980008A83A5 /* SparkleSystem.swift in Sources */,
+				547F632F2961516C008A83A5 /* MiscUtil.swift in Sources */,
 				542AFD06295A8F59004B53F9 /* ProgressBow.swift in Sources */,
 				5460DF772955A89100D00E0E /* Persistence+PomodoroEntry.swift in Sources */,
 				546754752953350700EA7F5E /* AppColor.swift in Sources */,

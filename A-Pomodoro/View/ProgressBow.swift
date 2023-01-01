@@ -18,6 +18,9 @@ struct ProgressBow: View {
     
     @EnvironmentObject var modelData: ModelData
     @State var isDragging = false
+    
+    @State private var sparkleSystem = SparkleSystem()
+    @State private var sparkleTime: TimeInterval = 0.0
 
     static let cut = 35.0
     static let endDeg = 90 - cut
@@ -88,6 +91,40 @@ struct ProgressBow: View {
                         let fraction = 1.0 - degDelta / Self.fullDegDelta
                         tempRemaining = Int32(Int(fraction * Double(total) / 10.0 + 0.5)) * 10
                     }
+                    sparkleSystem.center.x = value.location.x / w
+                    sparkleSystem.center.y = value.location.y / geometry.size.height
+                })
+                .onEnded({ value in
+                    isDragging = false
+                    if let newRemaining = tempRemaining {
+                        adjustmentHandler(newRemaining)
+                        tempRemaining = nil
+                    }
+                })
+            )
+            .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("parent"))
+                .onChanged({ value in
+                    if !isDragging {
+                        isDragging = true
+                        tempRemaining = remaining
+                    } else {
+                        let rad = atan2(value.location.y - cy, value.location.x - cx)
+                        let deg = rad * 180.0 / Double.pi
+                        var degDelta = deg - Self.startDeg
+                        if degDelta > 360 {
+                            degDelta -= 360
+                        }
+                        if degDelta > Self.fullDegDelta {
+                            let overflow = degDelta - Self.fullDegDelta
+                            if overflow > Self.cut {
+                                degDelta = 0
+                            } else {
+                                degDelta = Self.fullDegDelta
+                            }
+                        }
+                        let fraction = 1.0 - degDelta / Self.fullDegDelta
+                        tempRemaining = Int32(Int(fraction * Double(total) / 10.0 + 0.5)) * 10
+                    }
                 })
                 .onEnded({ value in
                     isDragging = false
@@ -112,18 +149,46 @@ struct ProgressBow: View {
             .buttonStyle(ProminentButton())
             .contentShape(Rectangle())
             .position(x: cx, y: startPosition.y + 0.025 * w)
-            
-            //.overlay(
-            //    knob
-            //    .stroke(modelData.appColor.textColor, lineWidth: 2)
-            //)
-
-            //Image(systemName: "ring.circle")
-            //.resizable()
-            //.frame(width: 24, height: 24)
-            //.position(x: knobPosition.x, y: knobPosition.y)
-            
-            
+                        
+            TimelineView(.animation) { timeline in
+                Canvas { context, size in
+                    let timelineDate = timeline.date.timeIntervalSinceReferenceDate
+                    let sinceSparkle = timelineDate - sparkleTime
+                    if sinceSparkle > 2.0 {
+                        return
+                    }
+                    sparkleSystem.radius = er * 1.3 / w
+                    sparkleSystem.center.x = kx / geometry.size.width
+                    sparkleSystem.center.y = ky / geometry.size.height
+                    sparkleSystem.update(date: timelineDate, sparklesOn: sinceSparkle < 0.65)
+                    context.blendMode = .plusLighter
+                    context.addFilter(.colorMultiply(modelData.appColor.accentColor2))
+                    
+                    for sparkle in sparkleSystem.particles {
+                        let since = timelineDate - sparkle.creationDate
+                        let duration = 0.5
+                        if since < duration {
+                            let xPos = sparkle.x * size.width
+                            let yPos = sparkle.y * size.height
+                            let scale = sparkle.scale
+                            
+                            let ox = since * 1.5 * Double.pi / duration
+                            context.opacity = 0.5 + 0.5 * sin(ox)
+                            context.transform = CGAffineTransform(translationX: xPos, y: yPos)
+                            context.concatenate(CGAffineTransform(scaleX: scale, y: scale))
+                            context.draw(sparkleSystem.image, at: CGPointZero)
+                        }
+                    }
+                }
+                .allowsHitTesting(false)
+            }
+            .ignoresSafeArea()
+            .onChange(of: remaining) {
+                newRemaining in
+                if (newRemaining % 60 == 0 && newRemaining != total) {
+                    sparkleTime = Date().timeIntervalSinceReferenceDate
+                }
+            }
         }
         .coordinateSpace(name: "parent")
     }
