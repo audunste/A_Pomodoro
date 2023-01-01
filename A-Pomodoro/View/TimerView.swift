@@ -267,6 +267,7 @@ struct TimerView: View {
         if (remaining <= 1) {
             return
         }
+        #if os(iOS)
         let content = UNMutableNotificationContent()
         switch (timerType) {
         case .pomodoro:
@@ -281,6 +282,9 @@ struct TimerView: View {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(remaining), repeats: false)
         let request = UNNotificationRequest(identifier: timerType.rawValue, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request)
+        #else
+        // TODO mac notification
+        #endif
     }
     
     func stopTimerAndCancelNotificationIfNeeded() {
@@ -291,7 +295,9 @@ struct TimerView: View {
         timer!.invalidate()
         timer = nil
 
+        #if os(iOS)
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
+        #endif
     }
     
     func goToNextStage() {

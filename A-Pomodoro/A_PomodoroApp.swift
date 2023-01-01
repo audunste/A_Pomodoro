@@ -9,7 +9,11 @@ import SwiftUI
 
 @main
 struct A_PomodoroApp: App {
+    #if os(iOS)
     @UIApplicationDelegateAdaptor var appDelegate: AppDelegate
+    #else
+    @NSApplicationDelegateAdaptor var appDelegate: AppDelegate
+    #endif
     let persistentContainer = PersistenceController.shared.persistentContainer
     @StateObject private var modelData = ModelData()
     @StateObject private var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
@@ -17,12 +21,6 @@ struct A_PomodoroApp: App {
         sortKey: "startDate")
 
     init() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
-        { success, error in
-            if let error = error {
-                print(error.localizedDescription)
-            }
-        }
     }
 
     var body: some Scene {
@@ -40,6 +38,9 @@ struct A_PomodoroApp: App {
                 .environmentObject(lastPomodoroEntryBinder)
                 .preferredColorScheme(.dark)
         }
+        #if os(macOS)
+        .windowStyle(.hiddenTitleBar)
+        #endif
         #endif
     }
 }

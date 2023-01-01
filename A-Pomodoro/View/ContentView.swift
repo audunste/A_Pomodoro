@@ -21,14 +21,28 @@ struct ContentView: View {
             VStack {
                 TabView(selection: $selection) {
                     TimerView(25, timerType: .pomodoro)
+                        .tabItem {
+                            Text("Pomodoro")
+                        }
                         .tag(TimerType.pomodoro)
                     TimerView(5, timerType: .shortBreak)
+                        .tabItem {
+                            Text("Short break")
+                        }
                         .tag(TimerType.shortBreak)
                     TimerView(15, timerType: .longBreak)
+                        .tabItem {
+                            Text("Long break")
+                        }
                         .tag(TimerType.longBreak)
                 }
                 .foregroundColor(modelData.appColor.textColor)
+                #if os(iOS)
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                #else
+                .tabViewStyle(.automatic)
+                #endif
+                #if os(iOS)
                 HStack {
                     Button {
                         selection = .pomodoro
@@ -65,6 +79,7 @@ struct ContentView: View {
                     .contentShape(Rectangle())
                 }
                 .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 0 : 8)
+                #endif
             }
             .background(modelData.appColor.backgroundColor)
             .onChange(of: selection) { newSelection in
@@ -108,7 +123,18 @@ struct ContentView: View {
     
     // This function is required to get the system color scheme
     func getSystemColorScheme() -> ColorScheme {
+        #if os(iOS)
         return UITraitCollection.current.userInterfaceStyle == .light ? .light : .dark
+        #else
+        let ea = NSApp.effectiveAppearance
+        let best = ea.bestMatch(from: [.aqua, .darkAqua]) ?? .aqua
+        switch best {
+        case .darkAqua:
+            return .dark
+        default:
+            return .light
+        }
+        #endif
     }
 
     func updateAppColors(_ newSelection: TimerType) {

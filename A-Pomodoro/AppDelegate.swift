@@ -5,6 +5,7 @@
 //  Created by Audun Steinholm on 23/12/2022.
 //
 
+#if os(iOS)
 import UIKit
 import CoreData
 import CloudKit
@@ -14,6 +15,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?)
     -> Bool
     {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
+        { success, error in
+            if let error = error {
+                print(error.localizedDescription)
+            }
+        }
         return true
     }
 
@@ -47,3 +54,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
     }
 }
+#else
+
+import AppKit
+import CoreData
+import CloudKit
+
+class AppDelegate: NSResponder, NSApplicationDelegate, ObservableObject {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        print("apom applicationDidFinishLaunching")
+    }
+}
+
+#endif
