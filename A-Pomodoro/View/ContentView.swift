@@ -14,7 +14,6 @@ struct ContentView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var selection: TimerType = .pomodoro
     @AppStorage("focusAndBreakStage") private var focusAndBreakStage = -1
-    @AppStorage("lastStageChangeTimestamp") private var lastStageChangeTimestamp = Date().timeIntervalSince1970
         
     var body: some View {
         GeometryReader { geometry in
@@ -86,19 +85,13 @@ struct ContentView: View {
                 updateAppColors(newSelection)
             }
             .onAppear() {
-                updateAppColors(selection)
-                let timeSinceStageChange = Date().timeIntervalSince1970 - lastStageChangeTimestamp
-                if (timeSinceStageChange > 60 * 45) {
-                    NSLog("Resetting stage because long time since last stage change")
-                    focusAndBreakStage = -1
-                } else {
-                    print("apom man obj = \(String(describing: lastPomodoroEntryBinder.managedObject))")
-                    if let entry = lastPomodoroEntryBinder.managedObject {
-                        print("apom setting focusAndBreakStage to \(entry.stage)")
-                        focusAndBreakStage = Int(entry.stage)
-                        updateSelection(stage: focusAndBreakStage)
-                    }
+                print("apom man obj = \(String(describing: lastPomodoroEntryBinder.managedObject))")
+                if let entry = lastPomodoroEntryBinder.managedObject {
+                    print("apom setting focusAndBreakStage to \(entry.stage)")
+                    focusAndBreakStage = Int(entry.stage)
+                    updateSelection(stage: focusAndBreakStage)
                 }
+                updateAppColors(selection)
             }
             .onChange(of: focusAndBreakStage) {
                 stage in
