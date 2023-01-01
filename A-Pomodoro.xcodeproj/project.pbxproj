@@ -16,6 +16,8 @@
 		542AFD0E295E8349004B53F9 /* ViewUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD0D295E8349004B53F9 /* ViewUtil.swift */; };
 		542AFD132961056F004B53F9 /* InitializeCloudKitSchema-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 542AFD122961056F004B53F9 /* InitializeCloudKitSchema-Info.plist */; };
 		542AFD16296106E6004B53F9 /* AppColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546754722953350600EA7F5E /* AppColor.swift */; };
+		542AFD1929611B72004B53F9 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 542AFD1729611B72004B53F9 /* InfoPlist.strings */; };
+		542AFD1C29611B72004B53F9 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 542AFD1A29611B72004B53F9 /* Localizable.strings */; };
 		5460DF4329549AEB00D00E0E /* Persistence+History.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF4229549AEB00D00E0E /* Persistence+History.swift */; };
 		5460DF452954A1C400D00E0E /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF442954A1C400D00E0E /* CoreDataHelper.swift */; };
 		5460DF602954CF4B00D00E0E /* CoreDataHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF442954A1C400D00E0E /* CoreDataHelper.swift */; };
@@ -70,6 +72,9 @@
 		542AFD09295C87EA004B53F9 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		542AFD0D295E8349004B53F9 /* ViewUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewUtil.swift; sourceTree = "<group>"; };
 		542AFD122961056F004B53F9 /* InitializeCloudKitSchema-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "InitializeCloudKitSchema-Info.plist"; sourceTree = "<group>"; };
+		542AFD1829611B72004B53F9 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		542AFD1B29611B72004B53F9 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/Localizable.strings; sourceTree = "<group>"; };
+		542AFD1D29611C75004B53F9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		5460DF4229549AEB00D00E0E /* Persistence+History.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+History.swift"; sourceTree = "<group>"; };
 		5460DF442954A1C400D00E0E /* CoreDataHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataHelper.swift; sourceTree = "<group>"; };
 		5460DF712954CF4B00D00E0E /* InitializeCloudKitSchema.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InitializeCloudKitSchema.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -173,6 +178,8 @@
 				5467546D295334E700EA7F5E /* Model */,
 				5467546C295334DB00EA7F5E /* View */,
 				5467546B295334D200EA7F5E /* Info.plist */,
+				542AFD1A29611B72004B53F9 /* Localizable.strings */,
+				542AFD1729611B72004B53F9 /* InfoPlist.strings */,
 				5467543B2953343800EA7F5E /* A_PomodoroApp.swift */,
 				5460DF7329552C2C00D00E0E /* AppDelegate.swift */,
 				546754442953343A00EA7F5E /* Assets.xcassets */,
@@ -372,6 +379,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				546754492953343A00EA7F5E /* Preview Assets.xcassets in Resources */,
+				542AFD1C29611B72004B53F9 /* Localizable.strings in Resources */,
+				542AFD1929611B72004B53F9 /* InfoPlist.strings in Resources */,
 				546754452953343A00EA7F5E /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -467,6 +476,26 @@
 			targetProxy = 546754592953343A00EA7F5E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		542AFD1729611B72004B53F9 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				542AFD1829611B72004B53F9 /* nb */,
+				542AFD1D29611C75004B53F9 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		542AFD1A29611B72004B53F9 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				542AFD1B29611B72004B53F9 /* nb */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		5460DF6F2954CF4B00D00E0E /* Debug */ = {

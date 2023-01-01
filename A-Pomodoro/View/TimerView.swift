@@ -51,7 +51,7 @@ struct TimerView: View {
     var body: some View {
         SquareZStack {
             ProgressText(remaining: displayedRemaining)
-            ProgressBow(buttonText: timer == nil ? "Start" : "Pause", remaining: remaining, total: seconds, tempRemaining: $tempRemaining, adjustmentHandler:
+            ProgressBow(buttonText: timer == nil ? NSLocalizedString("Start", comment: "Start button") : NSLocalizedString("Pause", comment: "Pause button"), remaining: remaining, total: seconds, tempRemaining: $tempRemaining, adjustmentHandler:
             {
                 newRemaining in
                 if let lastPomodoroEntry = relevantLastPomodoroEntryOrNil {

@@ -58,7 +58,7 @@ struct ContentView: View {
                     Button {
                         selection = .shortBreak
                     } label: {
-                        Text("Short Break")
+                        Text(NSLocalizedString("Short break", comment: "Name of short break timer"))
                         .padding(.bottom, 4)
                         .padding(.top, 4)
                     }
@@ -69,7 +69,7 @@ struct ContentView: View {
                     Button {
                         selection = .longBreak
                     } label: {
-                        Text("Long Break")
+                        Text(NSLocalizedString("Long break", comment: "Name of long break timer"))
                         .padding(.bottom, 4)
                         .padding(.top, 4)
                     }
