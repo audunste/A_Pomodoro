@@ -14,11 +14,20 @@ public extension Double {
         return Double(arc4random()) / 0xFFFFFFFF
     }
 
-    /// Random double between 0 and n-1.
-    ///
-    /// - Parameter n:  Interval max
-    /// - Returns:      Returns a random double point number between 0 and n max
     static func random(min: Double, max: Double) -> Double {
         return Double.random * (max - min) + min
+    }
+}
+
+class IdentifiableGroup<I, T>: Identifiable where I: Hashable {
+    let id: I
+    var items: [T] = []
+    
+    init(id: I) {
+        self.id = id
+    }
+    
+    func append(_ item: T) {
+        items.append(item)
     }
 }

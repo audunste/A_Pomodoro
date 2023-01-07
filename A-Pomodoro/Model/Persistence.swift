@@ -33,9 +33,37 @@ class PersistenceController: NSObject, ObservableObject {
     static var preview: PersistenceController = {
         var result = PersistenceController(inMemory: true)
         var viewContext = result.persistentContainer.viewContext
-        for _ in 0..<10 {
+        
+        let catWork = Category(context: viewContext)
+        catWork.title = "Work"
+        let workTask0 = Task(context: viewContext)
+        workTask0.category = catWork
+        let workTask1 = Task(context: viewContext)
+        workTask1.title = "This work task has a title"
+        workTask1.category = catWork
+        
+        let catHobbyProgramming = Category(context: viewContext)
+        catHobbyProgramming.title = "Hobby programming"
+        let hobbyTask0 = Task(context: viewContext)
+        hobbyTask0.category = catHobbyProgramming
+        let hobbyTask1 = Task(context: viewContext)
+        hobbyTask1.title = "This hobby task has a title"
+        hobbyTask1.category = catHobbyProgramming
+        let hobbyTask2 = Task(context: viewContext)
+        hobbyTask2.title = "Hobby task 2"
+        hobbyTask2.category = catHobbyProgramming
+        
+        let tasks = [
+            workTask0, workTask1, hobbyTask0, hobbyTask1, hobbyTask2
+        ]
+        
+        for i in 0..<60 {
             let newItem = PomodoroEntry(context: viewContext)
-            newItem.startDate = Date()
+            newItem.startDate = Date() + TimeInterval.hour * 5 * (Double(i) + Double.random(min: 0, max: 4))
+            newItem.timerType = "pomodoro"
+            if Double.random < 0.75 {
+                newItem.task = tasks.randomElement()
+            }
         }
         do {
             try viewContext.save()

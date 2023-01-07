@@ -7,95 +7,136 @@
 
 import SwiftUI
 
+enum SheetType: String {
+    case none
+    case history
+}
+
+extension GeometryProxy {
+    var navButtonWidth: CGFloat {
+        (min(430, size.width) - 48) / 3
+    }
+}
+
 struct ContentView: View {
 
     @EnvironmentObject var modelData: ModelData
     @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
     @Environment(\.colorScheme) private var colorScheme
     @State private var selection: TimerType = .pomodoro
+    @State private var sheet: SheetType = .none
     @AppStorage("focusAndBreakStage") private var focusAndBreakStage = -1
         
     var body: some View {
         GeometryReader { geometry in
-            VStack {
-                TabView(selection: $selection) {
-                    TimerView(25, timerType: .pomodoro)
-                        .tabItem {
+            ZStack {
+                VStack {
+                    TabView(selection: $selection) {
+                        TimerView(25, timerType: .pomodoro)
+                            .tabItem {
+                                Text("Pomodoro")
+                            }
+                            .tag(TimerType.pomodoro)
+                        TimerView(5, timerType: .shortBreak)
+                            .tabItem {
+                                Text("Short break")
+                            }
+                            .tag(TimerType.shortBreak)
+                        TimerView(15, timerType: .longBreak)
+                            .tabItem {
+                                Text("Long break")
+                            }
+                            .tag(TimerType.longBreak)
+                    }
+                    .foregroundColor(modelData.appColor.textColor)
+                    #if os(iOS)
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    #else
+                    .tabViewStyle(.automatic)
+                    #endif
+                    #if os(iOS)
+                    HStack(spacing: 8) {
+                        Spacer()
+                            .frame(width: 8)
+                        Button {
+                            selection = .pomodoro
+                        } label: {
                             Text("Pomodoro")
                         }
-                        .tag(TimerType.pomodoro)
-                    TimerView(5, timerType: .shortBreak)
-                        .tabItem {
-                            Text("Short break")
+                        .buttonStyle(NavButton(selection == .pomodoro))
+                        .frame(width: geometry.navButtonWidth)
+                        Button {
+                            selection = .shortBreak
+                        } label: {
+                            Text(NSLocalizedString("Short break", comment: "Name of short break timer"))
                         }
-                        .tag(TimerType.shortBreak)
-                    TimerView(15, timerType: .longBreak)
-                        .tabItem {
-                            Text("Long break")
+                        .buttonStyle(NavButton(selection == .shortBreak))
+                        .frame(width: geometry.navButtonWidth)
+                        Button {
+                            selection = .longBreak
+                        } label: {
+                            Text(NSLocalizedString("Long break", comment: "Name of long break timer"))
                         }
-                        .tag(TimerType.longBreak)
-                }
-                .foregroundColor(modelData.appColor.textColor)
-                #if os(iOS)
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                #else
-                .tabViewStyle(.automatic)
-                #endif
-                #if os(iOS)
-                HStack {
-                    Button {
-                        selection = .pomodoro
-                    } label: {
-                        Text("Pomodoro")
-                        .padding(.bottom, 4)
-                        .padding(.top, 4)
+                        .buttonStyle(NavButton(selection == .longBreak))
+                        .frame(width: geometry.navButtonWidth)
+                        Spacer()
+                            .frame(width: 8)
                     }
-                    .tint(modelData.appColor.accentColor)
-                    .foregroundColor(modelData.appColor.textColor)
-                    .buttonStyleFor(selected: selection == .pomodoro)
-                    .contentShape(Rectangle())
-                    Button {
-                        selection = .shortBreak
-                    } label: {
-                        Text(NSLocalizedString("Short break", comment: "Name of short break timer"))
-                        .padding(.bottom, 4)
-                        .padding(.top, 4)
-                    }
-                    .tint(modelData.appColor.accentColor)
-                    .foregroundColor(modelData.appColor.textColor)
-                    .buttonStyleFor(selected: selection == .shortBreak)
-                    .contentShape(Rectangle())
-                    Button {
-                        selection = .longBreak
-                    } label: {
-                        Text(NSLocalizedString("Long break", comment: "Name of long break timer"))
-                        .padding(.bottom, 4)
-                        .padding(.top, 4)
-                    }
-                    .tint(modelData.appColor.accentColor)
-                    .foregroundColor(modelData.appColor.textColor)
-                    .buttonStyleFor(selected: selection == .longBreak)
-                    .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 0 : 8)
+                    .fixedSize(horizontal: false, vertical: false)
+                    #endif
                 }
-                .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 0 : 8)
-                #endif
-            }
-            .background(modelData.appColor.backgroundColor)
-            .onChange(of: selection) { newSelection in
-                updateAppColors(newSelection)
-            }
-            .onAppear() {
-                print("apom man obj = \(String(describing: lastPomodoroEntryBinder.managedObject))")
-                if let entry = lastPomodoroEntryBinder.managedObject {
-                    print("apom setting focusAndBreakStage to \(entry.stage)")
-                    focusAndBreakStage = Int(entry.stage)
-                    updateSelection(stage: focusAndBreakStage)
+                .background(modelData.appColor.backgroundColor)
+                .onChange(of: selection) { newSelection in
+                    updateAppColors(newSelection)
                 }
-                updateAppColors(selection)
+                .onAppear() {
+                    print("apom man obj = \(String(describing: lastPomodoroEntryBinder.managedObject))")
+                    if let entry = lastPomodoroEntryBinder.managedObject {
+                        print("apom setting focusAndBreakStage to \(entry.stage)")
+                        focusAndBreakStage = Int(entry.stage)
+                        updateSelection(stage: focusAndBreakStage)
+                    }
+                    updateAppColors(selection)
+                }
+                .onChange(of: focusAndBreakStage) {
+                    stage in
+                    updateSelection(stage: stage)
+                }
             }
-            .onChange(of: focusAndBreakStage) {
-                stage in
-                updateSelection(stage: stage)
+            HStack {
+                Spacer()
+                Button {
+                    sheet = .history
+                } label: {
+                    Image(systemName: "chart.bar.xaxis")
+                    .frame(width: 24, height: 24)
+                }
+                .buttonStyle(IconButton())
+                Spacer()
+                .frame(width: 16)
+            }
+            .frame(height: 56)
+        }
+        .sheet(isPresented: isSheetPresented) {
+            switch sheet {
+            case .history:
+                HistoryView()
+            default:
+                Text("No sheet")
+            }
+        }
+    }
+    
+    var isSheetPresented: Binding<Bool> {
+        Binding {
+            return sheet != .none
+        }
+        set: {
+            newValue in
+            if !newValue {
+                sheet = .none
             }
         }
     }
@@ -159,17 +200,6 @@ struct ContentView: View {
     }
 }
 
-extension View {
-    @ViewBuilder
-    func buttonStyleFor(selected: Bool) -> some View {
-        if (selected) {
-            buttonStyle(SelectedButton())
-        } else {
-            buttonStyle(NormalButton())
-        }
-    }
-}
-
 struct PreviewModifier: ViewModifier {
     let device: String
     var modelData = ModelData()
@@ -197,19 +227,31 @@ extension View {
 struct ContentView_Previews: PreviewProvider {
     
     static var previews: some View {
-        ContentView()
+        GeometryReader() { geometry in
+            ContentView()
+            .environment(\.mainWindowSize, geometry.size)
+        }
         .previewDisplayName("SE portrait")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         
-        ContentView()
+        GeometryReader() { geometry in
+            ContentView()
+            .environment(\.mainWindowSize, geometry.size)
+        }
         .previewDisplayName("SE landscape")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .previewInterfaceOrientation(.landscapeLeft)
         
-        ContentView()
+        GeometryReader() { geometry in
+            ContentView()
+            .environment(\.mainWindowSize, geometry.size)
+        }
         .withPreviewEnvironment("iPhone 14 Pro Max")
         
-        ContentView()
+        GeometryReader() { geometry in
+            ContentView()
+            .environment(\.mainWindowSize, geometry.size)
+        }
         .withPreviewEnvironment("iPad (10th generation)")
     }
 }

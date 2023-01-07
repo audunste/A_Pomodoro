@@ -32,11 +32,14 @@ struct A_PomodoroApp: App {
         }
         #else
         WindowGroup {
-            ContentView()
-                .environment(\.managedObjectContext, persistentContainer.viewContext)
-                .environmentObject(modelData)
-                .environmentObject(lastPomodoroEntryBinder)
-                .preferredColorScheme(.dark)
+            GeometryReader() { geometry in
+                ContentView()
+                    .environment(\.managedObjectContext, persistentContainer.viewContext)
+                    .environment(\.mainWindowSize, geometry.size)
+                    .environmentObject(modelData)
+                    .environmentObject(lastPomodoroEntryBinder)
+                    .preferredColorScheme(.dark)
+            }
         }
         #if os(macOS)
         .windowStyle(.hiddenTitleBar)

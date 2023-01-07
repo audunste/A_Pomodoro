@@ -49,6 +49,9 @@
 		547F632B296148F3008A83A5 /* Sparkle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632A296148F3008A83A5 /* Sparkle.swift */; };
 		547F632D29614980008A83A5 /* SparkleSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632C29614980008A83A5 /* SparkleSystem.swift */; };
 		547F632F2961516C008A83A5 /* MiscUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632E2961516C008A83A5 /* MiscUtil.swift */; };
+		547F63312964DEEA008A83A5 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F63302964DEEA008A83A5 /* HistoryView.swift */; };
+		547F6335296820AF008A83A5 /* TimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F6334296820AF008A83A5 /* TimeUtil.swift */; };
+		547F6336296820AF008A83A5 /* TimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F6334296820AF008A83A5 /* TimeUtil.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +109,8 @@
 		547F632A296148F3008A83A5 /* Sparkle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sparkle.swift; sourceTree = "<group>"; };
 		547F632C29614980008A83A5 /* SparkleSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleSystem.swift; sourceTree = "<group>"; };
 		547F632E2961516C008A83A5 /* MiscUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiscUtil.swift; sourceTree = "<group>"; };
+		547F63302964DEEA008A83A5 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		547F6334296820AF008A83A5 /* TimeUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtil.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -233,6 +238,7 @@
 				542AFD0D295E8349004B53F9 /* ViewUtil.swift */,
 				547F632A296148F3008A83A5 /* Sparkle.swift */,
 				547F632C29614980008A83A5 /* SparkleSystem.swift */,
+				547F63302964DEEA008A83A5 /* HistoryView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -250,6 +256,7 @@
 				5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */,
 				5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */,
 				547F632E2961516C008A83A5 /* MiscUtil.swift */,
+				547F6334296820AF008A83A5 /* TimeUtil.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -438,6 +445,8 @@
 				542AFD04295A4F7C004B53F9 /* SquareZStack.swift in Sources */,
 				54675470295334FB00EA7F5E /* TimerView.swift in Sources */,
 				542AFD0E295E8349004B53F9 /* ViewUtil.swift in Sources */,
+				547F63312964DEEA008A83A5 /* HistoryView.swift in Sources */,
+				547F6335296820AF008A83A5 /* TimeUtil.swift in Sources */,
 				5467543C2953343800EA7F5E /* A_PomodoroApp.swift in Sources */,
 				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
 				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
@@ -461,6 +470,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				547F6336296820AF008A83A5 /* TimeUtil.swift in Sources */,
 				546754532953343A00EA7F5E /* A_PomodoroTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
