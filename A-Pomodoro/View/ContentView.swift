@@ -22,6 +22,7 @@ struct ContentView: View {
 
     @EnvironmentObject var modelData: ModelData
     @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.colorScheme) private var colorScheme
     @State private var selection: TimerType = .pomodoro
     @State private var sheet: SheetType = .none
@@ -123,6 +124,7 @@ struct ContentView: View {
             switch sheet {
             case .history:
                 HistoryView()
+                .environmentObject(HistoryViewModel(viewContext: viewContext))
             default:
                 Text("No sheet")
             }

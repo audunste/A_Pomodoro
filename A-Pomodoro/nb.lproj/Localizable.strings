@@ -1,4 +1,7 @@
 /* No comment provided by engineer. */
+"Count on day %@: %lld" = "Antall på %@: %lld";
+
+/* Name of long break timer */
 "Long break" = "Lang pause";
 
 /* Pause button */
@@ -7,9 +10,12 @@
 /* No comment provided by engineer. */
 "Pomodoro" = "Pomodoro";
 
-/* No comment provided by engineer. */
+/* Name of short break timer */
 "Short break" = "Kort pause";
 
 /* Start button */
 "Start" = "Start";
+
+/* History header */
+"Your history" = "Din historikk";
 

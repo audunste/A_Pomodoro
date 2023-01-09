@@ -52,6 +52,9 @@
 		547F63312964DEEA008A83A5 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F63302964DEEA008A83A5 /* HistoryView.swift */; };
 		547F6335296820AF008A83A5 /* TimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F6334296820AF008A83A5 /* TimeUtil.swift */; };
 		547F6336296820AF008A83A5 /* TimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F6334296820AF008A83A5 /* TimeUtil.swift */; };
+		54AE1583296AD4CE00BBFDA2 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1582296AD4CE00BBFDA2 /* HistoryViewModel.swift */; };
+		54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */; };
+		54AE1588296B813F00BBFDA2 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 54AE158A296B813F00BBFDA2 /* Localizable.stringsdict */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +114,10 @@
 		547F632E2961516C008A83A5 /* MiscUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiscUtil.swift; sourceTree = "<group>"; };
 		547F63302964DEEA008A83A5 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		547F6334296820AF008A83A5 /* TimeUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtil.swift; sourceTree = "<group>"; };
+		54AE1582296AD4CE00BBFDA2 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryHeader.swift; sourceTree = "<group>"; };
+		54AE158B296B815800BBFDA2 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = nb; path = nb.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		54AE158C296B819A00BBFDA2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -190,6 +197,7 @@
 				5467546C295334DB00EA7F5E /* View */,
 				5467546B295334D200EA7F5E /* Info.plist */,
 				542AFD1A29611B72004B53F9 /* Localizable.strings */,
+				54AE158A296B813F00BBFDA2 /* Localizable.stringsdict */,
 				542AFD1729611B72004B53F9 /* InfoPlist.strings */,
 				5467543B2953343800EA7F5E /* A_PomodoroApp.swift */,
 				5460DF7329552C2C00D00E0E /* AppDelegate.swift */,
@@ -239,6 +247,7 @@
 				547F632A296148F3008A83A5 /* Sparkle.swift */,
 				547F632C29614980008A83A5 /* SparkleSystem.swift */,
 				547F63302964DEEA008A83A5 /* HistoryView.swift */,
+				54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -257,6 +266,7 @@
 				5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */,
 				547F632E2961516C008A83A5 /* MiscUtil.swift */,
 				547F6334296820AF008A83A5 /* TimeUtil.swift */,
+				54AE1582296AD4CE00BBFDA2 /* HistoryViewModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -396,6 +406,7 @@
 			files = (
 				546754492953343A00EA7F5E /* Preview Assets.xcassets in Resources */,
 				542AFD1C29611B72004B53F9 /* Localizable.strings in Resources */,
+				54AE1588296B813F00BBFDA2 /* Localizable.stringsdict in Resources */,
 				542AFD1929611B72004B53F9 /* InfoPlist.strings in Resources */,
 				546754452953343A00EA7F5E /* Assets.xcassets in Resources */,
 			);
@@ -449,6 +460,7 @@
 				547F6335296820AF008A83A5 /* TimeUtil.swift in Sources */,
 				5467543C2953343800EA7F5E /* A_PomodoroApp.swift in Sources */,
 				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
+				54AE1583296AD4CE00BBFDA2 /* HistoryViewModel.swift in Sources */,
 				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
 				546754772953350700EA7F5E /* ModelData.swift in Sources */,
 				547F632B296148F3008A83A5 /* Sparkle.swift in Sources */,
@@ -459,6 +471,7 @@
 				5460DF772955A89100D00E0E /* Persistence+PomodoroEntry.swift in Sources */,
 				546754752953350700EA7F5E /* AppColor.swift in Sources */,
 				542AFD0A295C87EA004B53F9 /* ButtonStyles.swift in Sources */,
+				54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */,
 				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
 				5467543E2953343800EA7F5E /* Persistence.swift in Sources */,
 				546754762953350700EA7F5E /* TimerType.swift in Sources */,
@@ -515,6 +528,15 @@
 				542AFD1B29611B72004B53F9 /* nb */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		54AE158A296B813F00BBFDA2 /* Localizable.stringsdict */ = {
+			isa = PBXVariantGroup;
+			children = (
+				54AE158B296B815800BBFDA2 /* nb */,
+				54AE158C296B819A00BBFDA2 /* en */,
+			);
+			name = Localizable.stringsdict;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -738,7 +760,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "no.steinholm.A-Pomodoro";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -778,7 +800,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 12.3;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "no.steinholm.A-Pomodoro";
 				PRODUCT_NAME = "$(TARGET_NAME)";

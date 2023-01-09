@@ -59,7 +59,7 @@ class PersistenceController: NSObject, ObservableObject {
         
         for i in 0..<60 {
             let newItem = PomodoroEntry(context: viewContext)
-            newItem.startDate = Date() + TimeInterval.hour * 5 * (Double(i) + Double.random(min: 0, max: 4))
+            newItem.startDate = Date() - TimeInterval.hour * 5 * (Double(i) + Double.random(min: 0, max: 4))
             newItem.timerType = "pomodoro"
             if Double.random < 0.75 {
                 newItem.task = tasks.randomElement()

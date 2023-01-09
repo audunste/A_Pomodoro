@@ -307,8 +307,10 @@ struct TimerView: View {
     }
     
     func updateNotification() {
+        #if os(iOS)
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
         scheduleNotificationIfNeeded()
+        #endif
     }
     
     func goToNextStage() {
