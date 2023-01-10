@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+struct UnstyledButton: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+    }
+}
+
 struct NormalButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label

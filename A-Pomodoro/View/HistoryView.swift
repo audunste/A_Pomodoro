@@ -10,7 +10,6 @@ import CoreData
 
 
 struct HistoryView: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var modelData: ModelData
 
@@ -18,9 +17,10 @@ struct HistoryView: View {
         VStack() {
             ConfiguredHistoryView(config:
                 HistoryConfig(
-                    fromDay: ADay.today - 13,
+                    fromDay: ADay.today - 179,
                     granularity: TimeInterval.day))
         }
+        .ignoresSafeArea(.all)
     }
 }
 
@@ -47,6 +47,12 @@ struct FetchedHistoryView: View {
     let config: HistoryConfig
     @FetchRequest var pomodoroEntries: FetchedResults<PomodoroEntry>
     
+    #if os(macOS)
+    let showFooter = true
+    #else
+    let showFooter = false
+    #endif
+    
     func getDateString(date: Date) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .medium
@@ -56,17 +62,28 @@ struct FetchedHistoryView: View {
 
     var groupedEntries: [IdentifiableGroup<ADay, PomodoroEntry>] {
         var groupsByDay = [ADay: IdentifiableGroup<ADay, PomodoroEntry>]()
+        var minDay = ADay.max
+        var maxDay: ADay = 0
         for entry in pomodoroEntries {
             guard let startDate = entry.startDate else {
                 continue
             }
             let entryDay = ADay.of(date: startDate)
+            minDay = min(entryDay, minDay)
+            maxDay = max(entryDay, maxDay)
             if let group = groupsByDay[entryDay] {
                 group.append(entry)
             } else {
                 let group = IdentifiableGroup<ADay, PomodoroEntry>(id: entryDay)
                 group.append(entry)
                 groupsByDay[entryDay] = group
+            }
+        }
+        for day in minDay...maxDay {
+            guard let _ = groupsByDay[day] else {
+                let group = IdentifiableGroup<ADay, PomodoroEntry>(id: day)
+                groupsByDay[day] = group
+                continue
             }
         }
         return groupsByDay.keys.sorted().reversed().map{ groupsByDay[$0]! }
@@ -85,22 +102,40 @@ struct FetchedHistoryView: View {
             ZStack(alignment: .topLeading) {
                 HistoryHeader()
                 .frame(width: geometry.size.width, height: 72, alignment: .topLeading)
+                
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         let maxCount = self.maxCount
-                        ForEach(groupedEntries) { group in
+                        ForEach(Array(groupedEntries.enumerated()), id: \.element) {
+                            index, group in
                             VStack(alignment: .leading, spacing: 0) {
-                                Text(getDateString(date: group.id.date))
-                                .font(.system(size: 10))
-                                .foregroundColor(Color(white: 0.33))
-                                .frame(alignment: .leading)
-                                HStack {
-                                    Rectangle()
-                                    .frame(width: (geometry.size.width - 48) * Double(group.items.count) / Double(maxCount))
-                                    .foregroundColor(modelData.appColor.backgroundColor)
-                                    Text("\(group.items.count)")
-                                    .font(.system(size: 10, weight: .semibold))
+                                let weekday = Calendar.current.component(.weekday, from: group.id.date)
+                                
+                                if (index == 0 || (weekday - 1) == (Calendar.current.firstWeekday + 5) % 7) {
+                                    Text(getDateString(date: group.id.date))
+                                    .font(.system(size: 10))
+                                    .foregroundColor(Color(white: 0.33))
+                                    .frame(alignment: .leading)
+                                    .padding(.top, index > 0 ? 12 : 0)
+                                    .padding(.bottom, 2)
                                 }
+                                
+                                HStack(spacing: 4) {
+                                    Rectangle()
+                                    .frame(width: max(2, (geometry.size.width - 72) * Double(group.items.count) / Double(maxCount)))
+                                    .foregroundColor(modelData.appColor.backgroundColor)
+                                    
+                                    let weekdayName = Calendar.current.weekdaySymbols[weekday - 1]
+                                    
+                                    Text("\(String(weekdayName.prefix(3)))")
+                                    .font(.system(size: 10, weight: .regular))
+                                    .foregroundColor(Color(white: 0.33))
+                                    if group.items.count > 0 {
+                                        Text("\(group.items.count)")
+                                        .font(.system(size: 10, weight: .semibold))
+                                    }
+                                }
+                                
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, 16)
@@ -111,12 +146,41 @@ struct FetchedHistoryView: View {
                 }
                 .background(.white)
                 .foregroundColor(.black)
-                .frame(width: geometry.size.width, height: geometry.size.height - 72)
+                .frame(width: geometry.size.width, height: geometry.size.height - 72 - (showFooter ? 56 : 0))
                 .fixedSize(horizontal: true, vertical: true)
                 .offset(y: 72)
+                
+                if (showFooter) {
+                    HistoryFooter()
+                    .offset(y: geometry.size.height - 56)
+                    .frame(width: geometry.size.width, height: 56)
+                    .fixedSize(horizontal: true, vertical: true)
+                }
             }
             .frame(alignment: .topLeading)
         }
+    }
+}
+
+struct HistoryFooter: View {
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject private var modelData: ModelData
+    
+    var body: some View {
+        HStack {
+            Spacer()
+            Button {
+                dismiss()
+            } label: {
+                Text("Close")
+            }
+            .buttonStyle(NormalButton())
+            Spacer()
+            .frame(width: 16)
+        }
+        .frame(maxHeight: .infinity)
+        .background(modelData.appColor.backgroundColor)
+        .foregroundColor(modelData.appColor.textColor)
     }
 }
 
@@ -183,5 +247,11 @@ struct HistoryView_Previews: PreviewProvider {
         .previewInterfaceOrientation(.landscapeLeft)
         .environment(\.managedObjectContext, persistentContainer.viewContext)
         .environmentObject(viewModel)
+        
+        HistoryView()
+        .withPreviewEnvironment("iPad (10th generation)")
+        .environment(\.managedObjectContext, persistentContainer.viewContext)
+        .environmentObject(viewModel)
+        
     }
 }

@@ -19,7 +19,8 @@ public extension Double {
     }
 }
 
-class IdentifiableGroup<I, T>: Identifiable where I: Hashable {
+class IdentifiableGroup<I, T>: Identifiable, Hashable where I: Hashable {
+    
     let id: I
     var items: [T] = []
     
@@ -30,4 +31,14 @@ class IdentifiableGroup<I, T>: Identifiable where I: Hashable {
     func append(_ item: T) {
         items.append(item)
     }
+    
+    // TODO unsure if it's a good idea to do hashing and equality only based on the id
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: IdentifiableGroup<I, T>, rhs: IdentifiableGroup<I, T>) -> Bool {
+        return lhs.id == rhs.id
+    }
+
 }

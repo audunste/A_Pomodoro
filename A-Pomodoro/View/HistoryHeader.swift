@@ -49,6 +49,7 @@ struct HistoryHeader: View {
                             height: 56)
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.leading, 16)
                 .padding(.trailing, 16)
             }
@@ -63,28 +64,32 @@ struct HistoryHeader: View {
 struct HeaderItem: View {
     let person: Person
 
+    let largeFontSize: CGFloat = 14
+    let smallFontSize: CGFloat = 12
+
     var body: some View {
         Button {
             print("tap HeaderItem")
         } label: {
-            ZStack(alignment: .topLeading) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text(person.isYou
                     ? NSLocalizedString("Your history", comment: "History header")
                     : person.name)
-                .font(.system(size: 14, weight: .semibold))
-                .frame(alignment: .topLeading)
-                .padding(.top, 9)
+                .font(.system(size: largeFontSize, weight: .semibold))
+                .padding(.top, 8)
                 .padding(.leading, 16)
                 
                 Text(String(format: NSLocalizedString("%d pomodoro(s)", comment: "Number of pomodoros finished"), person.pomodoroCount))
-                .font(.system(size: 12, weight: .regular))
+                .font(.system(size: smallFontSize, weight: .regular))
                 .frame(alignment: .topLeading)
-                .padding(.top, 32)
+                .padding(.top, 8)
                 .padding(.leading, 16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .buttonStyle(UnstyledButton())
         .background(Color(white: 1.0, opacity: 0.07))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .cornerRadius(16)
     }
 }
