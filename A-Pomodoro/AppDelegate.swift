@@ -21,6 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
                 print(error.localizedDescription)
             }
         }
+        PersistenceController.shared.updatePomodoroShares()
         return true
     }
 
@@ -33,6 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
         configuration.delegateClass = SceneDelegate.self
         return configuration
     }
+    
 }
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {

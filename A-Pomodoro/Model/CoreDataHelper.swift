@@ -18,6 +18,27 @@ extension NSPersistentContainer {
         return context
     }
 }
+    
+extension NSPersistentCloudKitContainer {
+    #if os(iOS)
+    /**
+     Fetch and return shares in the persistent stores.
+     */
+    func fetchShares(in persistentStores: [NSPersistentStore]) throws -> [CKShare] {
+        var results = [CKShare]()
+        for persistentStore in persistentStores {
+            do {
+                let shares = try fetchShares(in: persistentStore)
+                results += shares
+            } catch let error {
+                print("Failed to fetch shares in \(persistentStore).")
+                throw error
+            }
+        }
+        return results
+    }
+    #endif
+}
 
 extension NSManagedObjectContext {
     func saveAndLogError() {

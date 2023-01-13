@@ -28,6 +28,13 @@ struct TransactionAuthor {
 }
 
 class PersistenceController: NSObject, ObservableObject {
+    static var active: PersistenceController {
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return Self.preview
+        }
+        return Self.shared
+    }
+
     static let shared = PersistenceController()
 
     static var preview: PersistenceController = {
@@ -76,7 +83,12 @@ class PersistenceController: NSObject, ObservableObject {
         return result
     }()
     
+    var pomodoroHistoryShare: CKShare?
     var inMemory: Bool = false
+
+    var persistentCloudKitContainer: NSPersistentCloudKitContainer {
+        return self.persistentContainer as! NSPersistentCloudKitContainer
+    }
 
     lazy var persistentContainer: NSPersistentContainer = {
         /**

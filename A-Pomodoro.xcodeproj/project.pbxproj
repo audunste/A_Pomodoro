@@ -55,6 +55,7 @@
 		54AE1583296AD4CE00BBFDA2 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1582296AD4CE00BBFDA2 /* HistoryViewModel.swift */; };
 		54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */; };
 		54AE1588296B813F00BBFDA2 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 54AE158A296B813F00BBFDA2 /* Localizable.stringsdict */; };
+		54AE158E296F7E3F00BBFDA2 /* Persistence+Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE158D296F7E3F00BBFDA2 /* Persistence+Share.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,6 +119,7 @@
 		54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryHeader.swift; sourceTree = "<group>"; };
 		54AE158B296B815800BBFDA2 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = nb; path = nb.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		54AE158C296B819A00BBFDA2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		54AE158D296F7E3F00BBFDA2 /* Persistence+Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+Share.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -260,6 +262,7 @@
 				546754732953350600EA7F5E /* TimerType.swift */,
 				5467543D2953343800EA7F5E /* Persistence.swift */,
 				5460DF4229549AEB00D00E0E /* Persistence+History.swift */,
+				54AE158D296F7E3F00BBFDA2 /* Persistence+Share.swift */,
 				5460DF762955A89100D00E0E /* Persistence+PomodoroEntry.swift */,
 				5460DF442954A1C400D00E0E /* CoreDataHelper.swift */,
 				5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */,
@@ -473,6 +476,7 @@
 				542AFD0A295C87EA004B53F9 /* ButtonStyles.swift in Sources */,
 				54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */,
 				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
+				54AE158E296F7E3F00BBFDA2 /* Persistence+Share.swift in Sources */,
 				5467543E2953343800EA7F5E /* Persistence.swift in Sources */,
 				546754762953350700EA7F5E /* TimerType.swift in Sources */,
 				546754412953343800EA7F5E /* A-Pomodoro.xcdatamodeld in Sources */,

@@ -60,15 +60,12 @@ struct TimerView: View {
                     updateRemaining()
                     updateNotification()
                 } else if newRemaining != remaining {
-                    let entry = PomodoroEntry(context: viewContext)
-                    entry.startDate = Date()
-                    entry.stage = Int64(getExpectedStage())
-                    entry.timerType = timerType.rawValue
-                    entry.timeSeconds = Double(seconds)
-                    entry.pauseDate = entry.startDate
-                    entry.adjustmentSeconds += Double(newRemaining) - Double(remaining)
-                    viewContext.saveAndLogError()
-                    print("apom new \(entry.timerType!)")
+                    PersistenceController.active.addPomodoroEntry(
+                        timeSeconds: Double(seconds),
+                        timerType: timerType.rawValue,
+                        stage: getExpectedStage(),
+                        pausedAndAdjusted: newRemaining - remaining,
+                        context: viewContext)
                     remaining = newRemaining
                 }
             }, actionHandler: self.togglePlay)
@@ -173,13 +170,11 @@ struct TimerView: View {
                     updateRemaining()
                 }
             } else {
-                let entry = PomodoroEntry(context: viewContext)
-                entry.startDate = Date()
-                entry.stage = Int64(getExpectedStage())
-                entry.timerType = timerType.rawValue
-                entry.timeSeconds = Double(seconds)
-                viewContext.saveAndLogError()
-                print("apom new \(entry.timerType!)")
+                PersistenceController.active.addPomodoroEntry(
+                    timeSeconds: Double(seconds),
+                    timerType: timerType.rawValue,
+                    stage: getExpectedStage(),
+                    context: viewContext)
                 remaining = seconds - 1
             }
             scheduleTimerAndNotificationIfNeeded()

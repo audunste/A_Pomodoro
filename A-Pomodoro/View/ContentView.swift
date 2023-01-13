@@ -125,11 +125,9 @@ struct ContentView: View {
             case .history:
                 #if os(macOS)
                 HistoryView()
-                .environmentObject(HistoryViewModel(viewContext: viewContext))
                 .frame(width: 400, height: 600)
                 #else
                 HistoryView()
-                .environmentObject(HistoryViewModel(viewContext: viewContext))
                 #endif
             default:
                 Text("No sheet")

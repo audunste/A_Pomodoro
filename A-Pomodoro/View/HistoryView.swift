@@ -11,16 +11,25 @@ import CoreData
 
 struct HistoryView: View {
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var modelData: ModelData
-
+    @StateObject var historyViewModel: HistoryViewModel
+    
+    init(_ viewModel: HistoryViewModel? = nil) {
+        _historyViewModel = StateObject(wrappedValue: viewModel ?? HistoryViewModel())
+    }
+    
     var body: some View {
-        VStack() {
+        VStack {
             ConfiguredHistoryView(config:
                 HistoryConfig(
                     fromDay: ADay.today - 179,
                     granularity: TimeInterval.day))
+                .environmentObject(historyViewModel)
         }
-        .ignoresSafeArea(.all)
+        .onAppear {
+            if historyViewModel.viewContext == nil {
+                historyViewModel.viewContext = viewContext
+            }
+        }
     }
 }
 
@@ -217,41 +226,35 @@ struct HistoryView_Previews: PreviewProvider {
 
     static let persistentContainer = PersistenceController.preview.persistentContainer
     static let viewModel = HistoryViewModel(viewContext: persistentContainer.viewContext)
-    static let viewModel2 = PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 2)
 
     static var previews: some View {
-        HistoryView()
+        HistoryView(viewModel)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .previewDisplayName("SE portrait")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(viewModel)
 
-        HistoryView()
+        HistoryView(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 2))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .previewDisplayName("Two people")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(viewModel2 as HistoryViewModel)
 
-        HistoryView()
+        HistoryView(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 3))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .previewDisplayName("Three people")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 3) as HistoryViewModel)
 
-        HistoryView()
+        HistoryView(viewModel)
         .previewDisplayName("SE landscape")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .previewInterfaceOrientation(.landscapeLeft)
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(viewModel)
         
-        HistoryView()
+        HistoryView(viewModel)
         .withPreviewEnvironment("iPad (10th generation)")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(viewModel)
         
     }
 }
