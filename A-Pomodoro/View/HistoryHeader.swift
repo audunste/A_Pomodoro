@@ -43,7 +43,7 @@ struct HistoryHeader: View {
                 HStack(spacing: 8) {
                     ForEach(Array(viewModel.people.enumerated()), id: \.element) {
                         index, person in
-                        HeaderItem(person: person)
+                        HeaderItem(person: person, isSelected: index == 0)
                         .frame(
                             width: Self.getItemWidth(index, viewModel.people.count, w),
                             height: 56)
@@ -63,32 +63,48 @@ struct HistoryHeader: View {
 
 struct HeaderItem: View {
     let person: Person
+    let isSelected: Bool
+    
+    @Environment(\.shareHistory) var shareHistory
 
     let largeFontSize: CGFloat = 14
     let smallFontSize: CGFloat = 12
 
     var body: some View {
         Button {
-            print("tap HeaderItem")
+            ALog("tap HeaderItem")
         } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(person.isYou
-                    ? NSLocalizedString("Your history", comment: "History header")
-                    : person.name)
-                .font(.system(size: largeFontSize, weight: .semibold))
-                .padding(.top, 8)
-                .padding(.leading, 16)
+            HStack {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(person.isYou
+                        ? NSLocalizedString("Your history", comment: "History header")
+                        : person.name)
+                    .font(.system(size: largeFontSize, weight: .semibold))
+                    .padding(.top, 8)
+                    .padding(.leading, 16)
+                    
+                    Text(String(format: NSLocalizedString("%d pomodoro(s)", comment: "Number of pomodoros finished"), person.pomodoroCount))
+                    .font(.system(size: smallFontSize, weight: .regular))
+                    .frame(alignment: .topLeading)
+                    .padding(.top, 8)
+                    .padding(.leading, 16)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 
-                Text(String(format: NSLocalizedString("%d pomodoro(s)", comment: "Number of pomodoros finished"), person.pomodoroCount))
-                .font(.system(size: smallFontSize, weight: .regular))
-                .frame(alignment: .topLeading)
-                .padding(.top, 8)
-                .padding(.leading, 16)
+                if person.isYou {
+                    Button {
+                        ALog("try share")
+                        shareHistory?()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                        .frame(width: 24, height: 24)
+                    }
+                    Spacer().frame(width: 10)
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .buttonStyle(UnstyledButton())
-        .background(Color(white: 1.0, opacity: 0.07))
+        .background(Color(white: isSelected ? 0.0 : 1.0, opacity: 0.07))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .cornerRadius(16)
     }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 extension PomodoroEntry {
 
@@ -40,4 +41,15 @@ extension PomodoroEntry {
         }
         return getRemaining() > 0
     }
+    
+    func clone(into context: NSManagedObjectContext) -> PomodoroEntry {
+        let clone = PomodoroEntry(context: context)
+        
+        for (key, _) in PomodoroEntry.entity().attributesByName {
+            clone.setValue(self.value(forKey: key), forKey: key)
+        }
+
+        return clone
+    }
+    
 }

@@ -40,6 +40,13 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
         }
     }
     
+    var managedObjectDebugString: String {
+        guard let object = managedObject as? NSManagedObject else {
+            return "nil"
+        }
+        return object.debugString(with: controller.managedObjectContext)
+    }
+    
     private func postinit(_ container: NSPersistentContainer) {
         assert(Thread.isMainThread)
         do {
@@ -60,7 +67,7 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
     }
     
     func deleteAllAndSave() {
-        NSLog("deleteAllAndSave")
+        ALog("deleteAllAndSave")
         let context = controller.managedObjectContext
         let deleteRequest = NSBatchDeleteRequest(fetchRequest: self.fetchRequest as! NSFetchRequest<NSFetchRequestResult>)
         deleteRequest.resultType = .resultTypeObjectIDs
@@ -81,15 +88,15 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        NSLog("LatestObjectBinder controllerDidChangeContent")
+        ALog("LatestObjectBinder controllerDidChangeContent")
         _ = maybeUpdateManagedObject()
     }
     
     private func maybeUpdateManagedObject() -> Bool {
         if let objects = self.controller.fetchedObjects {
             if !objects.isEmpty {
-                NSLog("Updating managed object")
                 self.managedObject = objects[0]
+                ALog("updating managed object \(self.managedObjectDebugString)")
                 return true
             }
         }
@@ -101,16 +108,16 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
         request: NSFetchRequest<T>)
     {
         let entityName = "\(T.self)"
-        NSLog("maybeCreateDefaults " + entityName)
+        ALog("maybeCreateDefaults " + entityName)
         do {
             let objects = try context.fetch(request)
             let count: Int = objects.count
             let str = String(count)
-            NSLog(entityName + " object count: " + str)
+            ALog(entityName + " object count: " + str)
             if !objects.isEmpty {
                 return
             }
-            NSLog("creating default " + entityName)
+            ALog("creating default " + entityName)
             // create new object
             let object = NSEntityDescription.insertNewObject(
                 forEntityName: entityName,

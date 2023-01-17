@@ -18,10 +18,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
         { success, error in
             if let error = error {
-                print(error.localizedDescription)
+                ALog(level: .warning, error.localizedDescription)
             }
         }
-        PersistenceController.shared.updatePomodoroShares()
+        UNUserNotificationCenter.current().delegate = self
+        #if !InitializeCloudKitSchema
+        DispatchQueue.global(qos: .userInitiated).async {
+            //PersistenceController.shared.startOver()
+            PersistenceController.shared.makeSureDefaultsExist()
+            //PersistenceController.shared.updatePomodoroShares()
+            Thread.sleep(forTimeInterval: 5.0)
+            PersistenceController.shared.printEntityCounts()
+            Thread.sleep(forTimeInterval: 5.0)
+            PersistenceController.shared.printEntityCounts()
+        }
+        #endif
         return true
     }
 
@@ -37,6 +48,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
     
 }
 
+extension AppDelegate: UNUserNotificationCenterDelegate {
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+           willPresent notification: UNNotification,
+           withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        ALog("notification in foreground")
+        completionHandler(.sound)
+    }
+
+}
+
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     /**
@@ -47,16 +70,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     {
         let persistenceController = PersistenceController.shared
         let sharedStore = persistenceController.sharedPersistentStore
-        if let container = persistenceController.persistentContainer as? NSPersistentCloudKitContainer {
-            container.acceptShareInvitations(from: [cloudKitShareMetadata], into: sharedStore) { (_, error) in
-                if let error = error {
-                    print("\(#function): Failed to accept share invitations: \(error)")
-                }
+        let container = persistenceController.persistentCloudKitContainer
+        container.acceptShareInvitations(from: [cloudKitShareMetadata], into: sharedStore) { (_, error) in
+            if let error = error {
+                ALog(level: .error, "Failed to accept share invitations: \(error)")
             }
         }
     }
 }
-#else
+
+#else // macOS
 
 import AppKit
 import CoreData
@@ -64,7 +87,7 @@ import CloudKit
 
 class AppDelegate: NSResponder, NSApplicationDelegate, ObservableObject {
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("apom applicationDidFinishLaunching")
+        ALog("applicationDidFinishLaunching")
     }
 }
 

@@ -34,7 +34,7 @@ class HistoryViewModel: ObservableObject {
         .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: true)
         .sink {
             notification in
-            print("apom change in history view model")
+            ALog("change in history view model")
             self.updatePeople()
         }
         .store(in: &cancelSet)

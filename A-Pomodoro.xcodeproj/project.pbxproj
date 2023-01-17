@@ -30,7 +30,7 @@
 		5460DF6D2954CF4B00D00E0E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 546754442953343A00EA7F5E /* Assets.xcassets */; };
 		5460DF7429552C2C00D00E0E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7329552C2C00D00E0E /* AppDelegate.swift */; };
 		5460DF752955A34600D00E0E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7329552C2C00D00E0E /* AppDelegate.swift */; };
-		5460DF772955A89100D00E0E /* Persistence+PomodoroEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF762955A89100D00E0E /* Persistence+PomodoroEntry.swift */; };
+		5460DF772955A89100D00E0E /* Persistence+Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF762955A89100D00E0E /* Persistence+Entities.swift */; };
 		5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */; };
 		5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */; };
 		5467543C2953343800EA7F5E /* A_PomodoroApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5467543B2953343800EA7F5E /* A_PomodoroApp.swift */; };
@@ -51,11 +51,16 @@
 		547F632F2961516C008A83A5 /* MiscUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632E2961516C008A83A5 /* MiscUtil.swift */; };
 		547F63312964DEEA008A83A5 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F63302964DEEA008A83A5 /* HistoryView.swift */; };
 		547F6335296820AF008A83A5 /* TimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F6334296820AF008A83A5 /* TimeUtil.swift */; };
-		547F6336296820AF008A83A5 /* TimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F6334296820AF008A83A5 /* TimeUtil.swift */; };
 		54AE1583296AD4CE00BBFDA2 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1582296AD4CE00BBFDA2 /* HistoryViewModel.swift */; };
 		54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */; };
 		54AE1588296B813F00BBFDA2 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 54AE158A296B813F00BBFDA2 /* Localizable.stringsdict */; };
 		54AE158E296F7E3F00BBFDA2 /* Persistence+Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE158D296F7E3F00BBFDA2 /* Persistence+Share.swift */; };
+		54AE1590297374E800BBFDA2 /* Persistence+Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE158F297374E700BBFDA2 /* Persistence+Defaults.swift */; };
+		54AE15952974CF5700BBFDA2 /* History+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE15942974CF5700BBFDA2 /* History+Util.swift */; };
+		54AE15972974D2AF00BBFDA2 /* Category+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE15962974D2AF00BBFDA2 /* Category+Util.swift */; };
+		54AE15992974D36100BBFDA2 /* Task+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE15982974D36100BBFDA2 /* Task+Util.swift */; };
+		54AE159E2976487D00BBFDA2 /* NSManagedObject+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE159D2976487D00BBFDA2 /* NSManagedObject+Util.swift */; };
+		54AE15A129764B3C00BBFDA2 /* ALog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE15A029764B3C00BBFDA2 /* ALog.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,7 +94,7 @@
 		5460DF442954A1C400D00E0E /* CoreDataHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataHelper.swift; sourceTree = "<group>"; };
 		5460DF712954CF4B00D00E0E /* InitializeCloudKitSchema.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InitializeCloudKitSchema.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5460DF7329552C2C00D00E0E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		5460DF762955A89100D00E0E /* Persistence+PomodoroEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+PomodoroEntry.swift"; sourceTree = "<group>"; };
+		5460DF762955A89100D00E0E /* Persistence+Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+Entities.swift"; sourceTree = "<group>"; };
 		5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestObjectBinder.swift; sourceTree = "<group>"; };
 		5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PomodoroEntry+Util.swift"; sourceTree = "<group>"; };
 		546754382953343800EA7F5E /* A-Pomodoro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "A-Pomodoro.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -120,6 +125,12 @@
 		54AE158B296B815800BBFDA2 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = nb; path = nb.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		54AE158C296B819A00BBFDA2 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		54AE158D296F7E3F00BBFDA2 /* Persistence+Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+Share.swift"; sourceTree = "<group>"; };
+		54AE158F297374E700BBFDA2 /* Persistence+Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+Defaults.swift"; sourceTree = "<group>"; };
+		54AE15942974CF5700BBFDA2 /* History+Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "History+Util.swift"; sourceTree = "<group>"; };
+		54AE15962974D2AF00BBFDA2 /* Category+Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Category+Util.swift"; sourceTree = "<group>"; };
+		54AE15982974D36100BBFDA2 /* Task+Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Task+Util.swift"; sourceTree = "<group>"; };
+		54AE159D2976487D00BBFDA2 /* NSManagedObject+Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+Util.swift"; sourceTree = "<group>"; };
+		54AE15A029764B3C00BBFDA2 /* ALog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ALog.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -194,6 +205,8 @@
 		5467543A2953343800EA7F5E /* A-Pomodoro */ = {
 			isa = PBXGroup;
 			children = (
+				54AE159F29764B2500BBFDA2 /* Util */,
+				54AE159C2976486400BBFDA2 /* Extensions */,
 				542AFD0F295FB9ED004B53F9 /* AppIcon */,
 				5467546D295334E700EA7F5E /* Model */,
 				5467546C295334DB00EA7F5E /* View */,
@@ -257,21 +270,49 @@
 		5467546D295334E700EA7F5E /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				54AE15932974CF2E00BBFDA2 /* Entities */,
 				546754722953350600EA7F5E /* AppColor.swift */,
 				546754742953350700EA7F5E /* ModelData.swift */,
 				546754732953350600EA7F5E /* TimerType.swift */,
 				5467543D2953343800EA7F5E /* Persistence.swift */,
 				5460DF4229549AEB00D00E0E /* Persistence+History.swift */,
 				54AE158D296F7E3F00BBFDA2 /* Persistence+Share.swift */,
-				5460DF762955A89100D00E0E /* Persistence+PomodoroEntry.swift */,
+				54AE158F297374E700BBFDA2 /* Persistence+Defaults.swift */,
+				5460DF762955A89100D00E0E /* Persistence+Entities.swift */,
 				5460DF442954A1C400D00E0E /* CoreDataHelper.swift */,
 				5460DF7829566E3B00D00E0E /* LatestObjectBinder.swift */,
-				5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */,
-				547F632E2961516C008A83A5 /* MiscUtil.swift */,
-				547F6334296820AF008A83A5 /* TimeUtil.swift */,
 				54AE1582296AD4CE00BBFDA2 /* HistoryViewModel.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		54AE15932974CF2E00BBFDA2 /* Entities */ = {
+			isa = PBXGroup;
+			children = (
+				5460DF7A2957032300D00E0E /* PomodoroEntry+Util.swift */,
+				54AE15942974CF5700BBFDA2 /* History+Util.swift */,
+				54AE15962974D2AF00BBFDA2 /* Category+Util.swift */,
+				54AE15982974D36100BBFDA2 /* Task+Util.swift */,
+			);
+			path = Entities;
+			sourceTree = "<group>";
+		};
+		54AE159C2976486400BBFDA2 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				54AE159D2976487D00BBFDA2 /* NSManagedObject+Util.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		54AE159F29764B2500BBFDA2 /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				547F6334296820AF008A83A5 /* TimeUtil.swift */,
+				547F632E2961516C008A83A5 /* MiscUtil.swift */,
+				54AE15A029764B3C00BBFDA2 /* ALog.swift */,
+			);
+			path = Util;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -456,14 +497,18 @@
 				5460DF7429552C2C00D00E0E /* AppDelegate.swift in Sources */,
 				5460DF452954A1C400D00E0E /* CoreDataHelper.swift in Sources */,
 				5460DF4329549AEB00D00E0E /* Persistence+History.swift in Sources */,
+				54AE159E2976487D00BBFDA2 /* NSManagedObject+Util.swift in Sources */,
 				542AFD04295A4F7C004B53F9 /* SquareZStack.swift in Sources */,
 				54675470295334FB00EA7F5E /* TimerView.swift in Sources */,
 				542AFD0E295E8349004B53F9 /* ViewUtil.swift in Sources */,
 				547F63312964DEEA008A83A5 /* HistoryView.swift in Sources */,
 				547F6335296820AF008A83A5 /* TimeUtil.swift in Sources */,
 				5467543C2953343800EA7F5E /* A_PomodoroApp.swift in Sources */,
+				54AE1590297374E800BBFDA2 /* Persistence+Defaults.swift in Sources */,
+				54AE15952974CF5700BBFDA2 /* History+Util.swift in Sources */,
 				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
 				54AE1583296AD4CE00BBFDA2 /* HistoryViewModel.swift in Sources */,
+				54AE15992974D36100BBFDA2 /* Task+Util.swift in Sources */,
 				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
 				546754772953350700EA7F5E /* ModelData.swift in Sources */,
 				547F632B296148F3008A83A5 /* Sparkle.swift in Sources */,
@@ -471,11 +516,13 @@
 				547F632D29614980008A83A5 /* SparkleSystem.swift in Sources */,
 				547F632F2961516C008A83A5 /* MiscUtil.swift in Sources */,
 				542AFD06295A8F59004B53F9 /* ProgressBow.swift in Sources */,
-				5460DF772955A89100D00E0E /* Persistence+PomodoroEntry.swift in Sources */,
+				54AE15A129764B3C00BBFDA2 /* ALog.swift in Sources */,
+				5460DF772955A89100D00E0E /* Persistence+Entities.swift in Sources */,
 				546754752953350700EA7F5E /* AppColor.swift in Sources */,
 				542AFD0A295C87EA004B53F9 /* ButtonStyles.swift in Sources */,
 				54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */,
 				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
+				54AE15972974D2AF00BBFDA2 /* Category+Util.swift in Sources */,
 				54AE158E296F7E3F00BBFDA2 /* Persistence+Share.swift in Sources */,
 				5467543E2953343800EA7F5E /* Persistence.swift in Sources */,
 				546754762953350700EA7F5E /* TimerType.swift in Sources */,
@@ -487,7 +534,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				547F6336296820AF008A83A5 /* TimeUtil.swift in Sources */,
 				546754532953343A00EA7F5E /* A_PomodoroTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -76,20 +76,20 @@ struct TimerView: View {
             let stage = max(0, stage)
             if (getExpectedStage() != stage) {
                 remaining = seconds
-                stopTimerAndCancelNotificationIfNeeded()
+                stopTimerAndCancelNotificationIfNeeded(delayedCancel: true)
             } else {
-                print("apom maybe start \(timerType)")
+                ALog("maybe start \(timerType)")
             }
         }
         .onChange(of: lastPomodoroEntry) {
             entry in
             guard let entry = entry else {
-                print("apom lastPomodoroEntry is nil in onChange")
+                ALog("lastPomodoroEntry is nil in onChange")
                 return
             }
-            print("apom lastPomodoroEntry onChange \(String(describing: entry.timerType))")
+            ALog("lastPomodoroEntry onChange \(String(describing: entry.timerType))")
             if focusAndBreakStage != entry.stage {
-                print("apom setStage \(entry.stage), was \(focusAndBreakStage)")
+                ALog("setStage \(entry.stage), was \(focusAndBreakStage)")
                 focusAndBreakStage = Int(entry.stage)
             }
             if !entry.isRunning {
@@ -116,6 +116,7 @@ struct TimerView: View {
             guard let lastPomodoroEntry = relevantLastPomodoroEntryOrNil else {
                 return
             }
+            ALog("onChange of pauseDate to \(String(describing: date))")
             if date == nil {
                 if lastPomodoroEntry.isRunning {
                     scheduleTimerAndNotificationIfNeeded()
@@ -129,8 +130,9 @@ struct TimerView: View {
             guard let lastPomodoroEntry = relevantLastPomodoroEntryOrNil else {
                 return
             }
+            ALog("relevant pomodoro isRunning=\(lastPomodoroEntry.isRunning)")
+            updateRemaining()
             if lastPomodoroEntry.isRunning {
-                updateRemaining()
                 scheduleTimerAndNotificationIfNeeded()
             }
         }
@@ -148,9 +150,6 @@ struct TimerView: View {
             return false
         }
         return lastPomodoroEntry.timerType ?? "nil" == timerType.rawValue
-    }
-    
-    func maybeHandleNewPomodoroEntry() {
     }
     
     func togglePlay() {
@@ -226,7 +225,7 @@ struct TimerView: View {
             return
         }
         let newRemaining = lastPomodoroEntry.getRemaining()
-        print("apom updateRemaining \(timerType) \(lastPomodoroEntry.timerType ?? "nil")")
+        //ALog("updateRemaining \(timerType) \(lastPomodoroEntry.timerType ?? "nil")")
         if (abs(newRemaining - Double(remaining - 1)) < 0.5) {
             remaining -= 1
         } else {
@@ -237,7 +236,7 @@ struct TimerView: View {
     func changeStageIfNeeded() {
         let expStage = getExpectedStage()
         if (expStage != focusAndBreakStage) {
-            NSLog("currStage = \(focusAndBreakStage) expStage = \(expStage)")
+            ALog("currStage = \(focusAndBreakStage) expStage = \(expStage)")
             focusAndBreakStage = expStage
         }
     }
@@ -246,6 +245,7 @@ struct TimerView: View {
         if timer != nil {
             return
         }
+        ALog("timer starting")
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true)
         { t in
             updateRemaining()
@@ -288,7 +288,7 @@ struct TimerView: View {
     
     }
     
-    func stopTimerAndCancelNotificationIfNeeded() {
+    func stopTimerAndCancelNotificationIfNeeded(delayedCancel: Bool = false) {
         if (timer == nil) {
             return
         }
@@ -297,7 +297,14 @@ struct TimerView: View {
         timer = nil
 
         #if os(iOS)
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
+        if delayedCancel {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
+                
+            }
+        } else {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
+        }
         #endif
     }
     
@@ -309,7 +316,7 @@ struct TimerView: View {
     }
     
     func goToNextStage() {
-        print("apom goToNextStage in \(timerType)")
+        ALog("goToNextStage in \(timerType)")
         focusAndBreakStage += 1
     }
 }

@@ -71,6 +71,9 @@ struct FetchedHistoryView: View {
 
     var groupedEntries: [IdentifiableGroup<ADay, PomodoroEntry>] {
         var groupsByDay = [ADay: IdentifiableGroup<ADay, PomodoroEntry>]()
+        if pomodoroEntries.isEmpty {
+            return []
+        }
         var minDay = ADay.max
         var maxDay: ADay = 0
         for entry in pomodoroEntries {

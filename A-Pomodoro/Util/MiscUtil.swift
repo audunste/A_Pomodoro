@@ -42,3 +42,16 @@ class IdentifiableGroup<I, T>: Identifiable, Hashable where I: Hashable {
     }
 
 }
+
+func descriptionOrNil(optional: Optional<Any>) -> String {
+    if let optional = optional {
+        return String(describing: optional)
+    }
+    return "nil"
+}
+
+func synchronized<T>(_ lock: AnyObject, _ body: () throws -> T) rethrows -> T {
+    objc_sync_enter(lock)
+    defer { objc_sync_exit(lock) }
+    return try body()
+}

@@ -136,7 +136,7 @@ struct ProgressBow: View {
             )
             
             Button {
-                print("apom toggle play/pause")
+                ALog("toggle play/pause")
                 actionHandler()
             } label: {
                 Text(buttonText)

@@ -93,9 +93,9 @@ struct ContentView: View {
                     updateAppColors(newSelection)
                 }
                 .onAppear() {
-                    print("apom man obj = \(String(describing: lastPomodoroEntryBinder.managedObject))")
+                    ALog("man obj: \(lastPomodoroEntryBinder.managedObjectDebugString)")
                     if let entry = lastPomodoroEntryBinder.managedObject {
-                        print("apom setting focusAndBreakStage to \(entry.stage)")
+                        ALog("setting focusAndBreakStage to \(entry.stage)")
                         focusAndBreakStage = Int(entry.stage)
                         updateSelection(stage: focusAndBreakStage)
                     }
@@ -128,6 +128,14 @@ struct ContentView: View {
                 .frame(width: 400, height: 600)
                 #else
                 HistoryView()
+                //.environment(\.shareHistory, ShareHistoryAction(action: {
+                .environment(\.shareHistory, {
+                    ALog("share history")
+                    sheet = .none
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        PersistenceController.shared.presentCloudSharingController()
+                    }
+                })
                 #endif
             default:
                 Text("No sheet")
@@ -148,7 +156,7 @@ struct ContentView: View {
     }
     
     func updateSelection(stage: Int) {
-        print("apom stage onChange to = \(stage)")
+        ALog("stage onChange to = \(stage)")
         if (stage % 2 == 0) {
             selection = .pomodoro
         } else {

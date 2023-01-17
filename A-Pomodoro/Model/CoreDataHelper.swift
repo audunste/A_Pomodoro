@@ -31,7 +31,7 @@ extension NSPersistentCloudKitContainer {
                 let shares = try fetchShares(in: persistentStore)
                 results += shares
             } catch let error {
-                print("Failed to fetch shares in \(persistentStore).")
+                ALog(level: .error, "(\(#function) failed to fetch shares in \(persistentStore).")
                 throw error
             }
         }
@@ -45,7 +45,7 @@ extension NSManagedObjectContext {
         do {
             try save()
         } catch {
-            print("Failed to save Core Data context: \(error)")
+            ALog(level: .error, "Failed to save Core Data context: \(error)")
         }
     }
 }

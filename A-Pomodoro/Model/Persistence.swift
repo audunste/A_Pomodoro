@@ -28,6 +28,19 @@ struct TransactionAuthor {
 }
 
 class PersistenceController: NSObject, ObservableObject {
+
+    @Published var activeTaskId: NSManagedObjectID?
+
+    var pomodoroHistoryShare: CKShare?
+    var inMemory: Bool = false
+
+    func getActiveTask(context: NSManagedObjectContext) -> Task? {
+        if let activeTaskId = activeTaskId {
+            return context.object(with: activeTaskId) as? Task
+        }
+        return nil
+    }
+
     static var active: PersistenceController {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return Self.preview
@@ -66,7 +79,8 @@ class PersistenceController: NSObject, ObservableObject {
         
         for i in 0..<60 {
             let newItem = PomodoroEntry(context: viewContext)
-            newItem.startDate = Date() - TimeInterval.hour * 5 * (Double(i) + Double.random(min: 0, max: 4))
+            let ago: Double = TimeInterval.hour * 5 * (Double(i) - Double.random(min: 0, max: 4))
+            newItem.startDate = Date() - ago
             newItem.timerType = "pomodoro"
             if Double.random < 0.75 {
                 newItem.task = tasks.randomElement()
@@ -83,9 +97,6 @@ class PersistenceController: NSObject, ObservableObject {
         return result
     }()
     
-    var pomodoroHistoryShare: CKShare?
-    var inMemory: Bool = false
-
     var persistentCloudKitContainer: NSPersistentCloudKitContainer {
         return self.persistentContainer as! NSPersistentCloudKitContainer
     }
@@ -184,7 +195,7 @@ class PersistenceController: NSObject, ObservableObject {
                 try container.initializeCloudKitSchema()
             }
         } catch {
-            print("\(#function): initializeCloudKitSchema: \(error)")
+            ALog(level: .error, " initializeCloudKitSchema: \(error)")
         }
         #else
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy

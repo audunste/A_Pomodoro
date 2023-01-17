@@ -80,6 +80,7 @@ extension PersistenceController {
         }
         // print("\(#function): Processing transactions: \(transactions.count).")
 
+
         /**
          Post transactions so observers can update the UI, if necessary, even when transactions is empty
          because when a share changes, Core Data triggers a store remote change notification with no transaction.
@@ -93,6 +94,40 @@ extension PersistenceController {
             updateHistoryToken(with: storeUUID, newToken: newToken)
         }
         
+        /**
+         Limit to the private store so only owners can deduplicate the tags. Owners have full access to the private database, and so
+         don't need to worry about the permissions.
+         */
+        guard !transactions.isEmpty, storeUUID == privatePersistentStore.identifier else {
+            return
+        }
+        ALog("performHistoryProcessing: \(transactions.count)")
+        
+        // Detect if there's a possibility of duplicated default History, Category or Task
+        var possibleDuplicates = [NSManagedObjectID]()
+        var relevantDeletes = [NSManagedObjectID]()
+        
+        for transaction in transactions where transaction.changes != nil {
+            for change in transaction.changes! {
+                switch change.changedObjectID.entity.name {
+                case History.entity().name, Category.entity().name, Task.entity().name:
+                    if change.changeType == .insert {
+                        possibleDuplicates.append(change.changedObjectID)
+                    } else if change.changeType == .delete {
+                        relevantDeletes.append(change.changedObjectID)
+                    }
+                default:
+                    continue
+                }
+            }
+        }
+        
+        #if !InitializeCloudKitSchema
+        if !possibleDuplicates.isEmpty {
+            //mergeDefaultsLater()
+            mergeDefaultsAndWait(possibleDuplicates: possibleDuplicates)
+        }
+        #endif
     }
     
     /**
