@@ -25,21 +25,64 @@ extension CKContainer {
 }
 
 extension PersistenceController {
-    
+
     func presentCloudSharingController() {
-        guard let share = self.pomodoroHistoryShare else {
-            ALog(level: .warning, "failed to retrieve pomodoroHistoryShare.")
-            return
+        do {
+            try persistentCloudKitContainer.viewContext.performAndWait {
+                let request = History.fetchRequest()
+                let histories = try request.execute()
+                if histories.count > 0 {
+                    // TODO handle multiple histories
+                    presentCloudSharingController(history: histories[0])
+                }
+            }
+        } catch {
+            fatalError("#\(#function): error: \(error)")
         }
-        let sharingController = UICloudSharingController(share: share, container: cloudKitContainer)
-        sharingController.availablePermissions = [.allowPrivate, .allowReadWrite]
+    }
+    func presentCloudSharingController(history: History) {
+        /**
+         Grab the share if the history is already shared.
+         */
+        var historyShare: CKShare?
+        if let shareSet = try? persistentCloudKitContainer.fetchShares(matching: [history.objectID]),
+           let (_, share) = shareSet.first {
+            historyShare = share
+        }
+
+        let sharingController: UICloudSharingController
+        if historyShare == nil {
+            sharingController = newSharingController(unsharedHistory: history, persistenceController: self)
+        } else {
+            sharingController = UICloudSharingController(share: historyShare!, container: cloudKitContainer)
+        }
         sharingController.delegate = self
+        sharingController.availablePermissions = [.allowPrivate, .allowReadWrite]
+        
         /**
          Setting the presentation style to .formSheet so there's no need to specify sourceView, sourceItem, or sourceRect.
          */
         if let viewController = rootViewController {
             sharingController.modalPresentationStyle = .formSheet
             viewController.present(sharingController, animated: true)
+        }
+    }
+    
+    private func newSharingController(unsharedHistory: History, persistenceController: PersistenceController) -> UICloudSharingController {
+        return UICloudSharingController { (_, completion: @escaping (CKShare?, CKContainer?, Error?) -> Void) in
+            /**
+             If the share's publicPermission is CKShareParticipantPermissionNone, only private participants can accept the share.
+             Private participants mean the participants an app adds to a share by calling CKShare.addParticipant.
+             If the share is more permissive, and is, therefore, a public share, anyone with the shareURL can accept it,
+             or self-add themselves to it.
+             The default value of publicPermission is CKShare.ParticipantPermission.none.
+             */
+            self.persistentCloudKitContainer.share([unsharedHistory], to: nil) { objectIDs, share, container, error in
+                if let share = share {
+                    self.configure(share: share)
+                }
+                completion(share, container, error)
+            }
         }
     }
 
@@ -163,6 +206,11 @@ extension PersistenceController {
         let stores = [privatePersistentStore, sharedPersistentStore]
         let shares = try? persistentCloudKitContainer.fetchShares(in: stores)
         return shares?.map { $0.title } ?? []
+    }
+    
+    private func configure(share: CKShare, with history: History? = nil) {
+        share[CKShare.SystemFieldKey.title] = "Pomodoro log"
+        // TODO thumbnail
     }
     
 }

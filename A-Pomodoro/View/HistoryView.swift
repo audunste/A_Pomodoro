@@ -21,6 +21,7 @@ struct HistoryView: View {
         VStack {
             ConfiguredHistoryView(config:
                 HistoryConfig(
+                    historyId: historyViewModel.activeId,
                     fromDay: ADay.today - 179,
                     granularity: TimeInterval.day))
                 .environmentObject(historyViewModel)
@@ -30,10 +31,18 @@ struct HistoryView: View {
                 historyViewModel.viewContext = viewContext
             }
         }
+        .onChange(of: historyViewModel.people) {
+            people in
+            ALog("onChange people")
+            if historyViewModel.activeId == nil && historyViewModel.people.count > 0 {
+                historyViewModel.activeId = historyViewModel.people[0].id
+            }
+        }
     }
 }
 
 struct HistoryConfig {
+    let historyId: NSManagedObjectID?
     let fromDay: ADay
     let granularity: TimeInterval
 }
@@ -41,13 +50,31 @@ struct HistoryConfig {
 struct ConfiguredHistoryView: View {
 
     let config: HistoryConfig
+    @Environment(\.managedObjectContext) var viewContext
+    
+    var history: History? {
+        if let id = config.historyId {
+            return try? viewContext.existingObject(with: id) as? History
+        }
+        return nil
+    }
+    
+    var pomodoroEntryFetchRequest: FetchRequest<PomodoroEntry> {
+        if let history = history {
+            ALog("HistoryView has a history")
+            return FetchRequest(
+                sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)],
+                predicate: NSPredicate(format:"startDate >= %@ AND timerType == 'pomodoro' AND task != nil AND task.category.history = %@", config.fromDay.date as NSDate, history))
+        }
+        return FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(value: false))
+    }
     
     var body: some View {
         FetchedHistoryView(
             config: config,
-            pomodoroEntries: FetchRequest(
-                sortDescriptors: [SortDescriptor(\.startDate, order: .reverse)],
-                predicate: NSPredicate(format:"startDate >= %@ AND timerType == 'pomodoro'", config.fromDay.date as NSDate)))
+            pomodoroEntries: pomodoroEntryFetchRequest)
     }
 }
 
@@ -153,6 +180,11 @@ struct FetchedHistoryView: View {
                             .padding(.leading, 16)
                             .padding(.top, 4)
                         }
+                        if maxCount == 0 {
+                            Spacer()
+                            .frame(maxWidth: .infinity)
+                        }
+                        
                     }
                     .padding(.top, 12)
                 }
@@ -211,13 +243,13 @@ class PreviewHistoryViewModel: HistoryViewModel {
         case 2:
             self.people = [
                 self.people[0],
-                Person(name: "Audun", pomodoroCount: 678)
+                Person(historyId: History(context: self.viewContext!).objectID, name: "Audun", pomodoroCount: 678)
             ]
         case 3:
             self.people = [
                 self.people[0],
-                Person(name: "Audun", pomodoroCount: 678),
-                Person(name: "Tobias", pomodoroCount: 1782),
+                Person(historyId: History(context: self.viewContext!).objectID, name: "Audun", pomodoroCount: 678),
+                Person(historyId: History(context: self.viewContext!).objectID, name: "Tobias", pomodoroCount: 1782),
             ]
         default:
             return

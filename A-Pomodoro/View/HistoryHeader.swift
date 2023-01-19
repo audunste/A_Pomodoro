@@ -43,7 +43,7 @@ struct HistoryHeader: View {
                 HStack(spacing: 8) {
                     ForEach(Array(viewModel.people.enumerated()), id: \.element) {
                         index, person in
-                        HeaderItem(person: person, isSelected: index == 0)
+                        HeaderItem(person: person, isSelected: viewModel.activeId == person.id)
                         .frame(
                             width: Self.getItemWidth(index, viewModel.people.count, w),
                             height: 56)
@@ -66,6 +66,7 @@ struct HeaderItem: View {
     let isSelected: Bool
     
     @Environment(\.shareHistory) var shareHistory
+    @EnvironmentObject var historyViewModel: HistoryViewModel
 
     let largeFontSize: CGFloat = 14
     let smallFontSize: CGFloat = 12
@@ -73,6 +74,7 @@ struct HeaderItem: View {
     var body: some View {
         Button {
             ALog("tap HeaderItem")
+            historyViewModel.activeId = person.id
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 0) {

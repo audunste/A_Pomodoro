@@ -68,12 +68,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func windowScene(_ windowScene: UIWindowScene,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata)
     {
+        ALog("share incoming: \(String(describing: cloudKitShareMetadata))")
         let persistenceController = PersistenceController.shared
         let sharedStore = persistenceController.sharedPersistentStore
         let container = persistenceController.persistentCloudKitContainer
         container.acceptShareInvitations(from: [cloudKitShareMetadata], into: sharedStore) { (_, error) in
             if let error = error {
                 ALog(level: .error, "Failed to accept share invitations: \(error)")
+            } else {
+                ALog("share accept success?")
             }
         }
     }

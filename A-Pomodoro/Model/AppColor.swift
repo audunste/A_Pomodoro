@@ -23,10 +23,10 @@ struct AppColor {
     }
     
     static let pomodoroLight = AppColor(
-        hue: 0.01, saturation: 0.62, b1: 0.76, b2: 0.96)
+        hue: 0.01, saturation: 0.64, b1: 0.74, b2: 0.94)
     
     static let pomodoroDark = AppColor(
-        hue: 0.01, saturation: 0.62, b1: 0.66, b2: 0.86, textWhite: 0.95)
+        hue: 0.01, saturation: 0.64, b1: 0.64, b2: 0.84, textWhite: 0.95)
 
     static let shortBreakLight = AppColor(
         hue: 0.32, saturation: 0.60, b1: 0.54, b2: 0.74)
