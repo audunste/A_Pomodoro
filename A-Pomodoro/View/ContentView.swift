@@ -26,6 +26,7 @@ struct ContentView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var selection: TimerType = .pomodoro
     @State private var sheet: SheetType = .none
+    @State private var popover: Bool = true
     @AppStorage("focusAndBreakStage") private var focusAndBreakStage = -1
     
     var body: some View {
@@ -120,6 +121,23 @@ struct ContentView: View {
             }
             .frame(height: 56)
         }
+        //.blur(radius: 4)
+        /*
+        .popover(isPresented: $popover) {
+            ZStack {
+            
+                ProgressView {
+                    Text("Preparing share...")
+                }
+                .padding(32)
+                //.foregroundColor(.black)
+                .background(.regularMaterial.shadow(.drop(radius: 2)), in: RoundedRectangle(cornerRadius: 16))
+            }
+            .background(.clear)
+            .preferredColorScheme(.light)
+        
+        }
+        */
         .sheet(isPresented: isSheetPresented) {
             switch sheet {
             case .history:
@@ -128,7 +146,6 @@ struct ContentView: View {
                 .frame(width: 400, height: 600)
                 #else
                 HistoryView()
-                //.environment(\.shareHistory, ShareHistoryAction(action: {
                 .environment(\.shareHistory, {
                     ALog("share history")
                     sheet = .none

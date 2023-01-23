@@ -16,14 +16,19 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
     let didChange = PassthroughSubject<Void, Never>()
     private let controller: NSFetchedResultsController<T>
     private let fetchRequest: NSFetchRequest<T>
+    private let postFilter: ((T) -> Bool)?
     
     @Published var managedObject: T? = nil
 
-    init(container: NSPersistentContainer, sortKey: String) {
+    init(container: NSPersistentContainer, sortKey: String, predicate: NSPredicate? = nil, postFilter: ((T) -> Bool)? = nil) {
         let context = container.viewContext
         let entityName = "\(T.self)"
         self.fetchRequest = NSFetchRequest<T>(entityName: entityName)
         self.fetchRequest.sortDescriptors = [NSSortDescriptor(key: sortKey, ascending: false)]
+        if predicate != nil {
+            self.fetchRequest.predicate = predicate
+        }
+        self.postFilter = postFilter
         self.controller = NSFetchedResultsController(
             fetchRequest: self.fetchRequest,
             managedObjectContext: context,
@@ -95,7 +100,11 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
     private func maybeUpdateManagedObject() -> Bool {
         if let objects = self.controller.fetchedObjects {
             if !objects.isEmpty {
-                self.managedObject = objects[0]
+                if let postFilter = self.postFilter {
+                    self.managedObject = objects.filter { postFilter($0) }.first
+                } else {
+                    self.managedObject = objects.first
+                }
                 ALog("updating managed object \(self.managedObjectDebugString)")
                 return true
             }
@@ -119,7 +128,7 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
             }
             ALog("creating default " + entityName)
             // create new object
-            let object = NSEntityDescription.insertNewObject(
+            _ = NSEntityDescription.insertNewObject(
                 forEntityName: entityName,
                 into: context) as! T
             try context.save()

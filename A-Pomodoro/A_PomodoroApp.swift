@@ -18,7 +18,7 @@ struct A_PomodoroApp: App {
     @StateObject private var modelData = ModelData()
     @StateObject private var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
         container: PersistenceController.shared.persistentContainer,
-        sortKey: "startDate")
+        sortKey: "startDate") { $0.isMine }
 
     init() {
     }

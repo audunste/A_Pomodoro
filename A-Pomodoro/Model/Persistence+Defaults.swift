@@ -13,11 +13,7 @@ import CloudKit
 extension PersistenceController {
 
     func makeSureDefaultsExist() {
-        let container = persistentCloudKitContainer
-        let taskContext = container.newTaskContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        
-        taskContext.performAndWait {
+        performAndWait { taskContext in
             do {
                 let request = Task.fetchRequest()
                 let count = try taskContext.count(for: request)
@@ -44,14 +40,18 @@ extension PersistenceController {
         }
     }
     
+    func fixHistoryShare() {
+        performAndWait { context in
+            guard let history = getOwnHistory(), let share = getShare(for: history) else {
+                ALog(level: .warning, "No own history")
+                return
+            }
+            
+        }
+    }
+    
     func mergeDefaultsAndWait(possibleDuplicates: [NSManagedObjectID]) {
-        /**
-         Make any store changes on a background context with the transaction author name of this app.
-         Use performAndWait to serialize the steps. historyQueue runs in the background so this doesn't block the main queue.
-         */
-        let taskContext = persistentContainer.newTaskContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        taskContext.performAndWait {
+        performAndWait { taskContext in
             do {
                 try possibleDuplicates.forEach { objectID in
                     try mergeIfDefault(objectID: objectID, context: taskContext)
@@ -82,7 +82,6 @@ extension PersistenceController {
     func mergeIfDefault(objectID: NSManagedObjectID, context: NSManagedObjectContext) throws {
         let object = context.object(with: objectID)
         if object is History {
-            // TODO deal with someone elses History
             try mergeHistories(context)
         }
     }
@@ -91,7 +90,8 @@ extension PersistenceController {
         // For now, simple check if there are two history entries
         let container = self.persistentCloudKitContainer
         let request = History.fetchRequest()
-        let histories = try request.execute()
+        let allHistories = try request.execute()
+        let histories = allHistories.filter { $0.isMine }
         if histories.count > 1 {
             // Find oldest shared or just oldest history
             var best: History? = nil
@@ -193,11 +193,7 @@ extension PersistenceController {
     }
     
     func startOver() {
-        let container = persistentCloudKitContainer
-        let taskContext = container.newTaskContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-
-        taskContext.perform {
+        performAndWait { taskContext in
             do {
                 try self.deleteAll(PomodoroEntry.fetchRequest(), taskContext)
                 try self.deleteAll(Task.fetchRequest(), taskContext)
@@ -223,13 +219,9 @@ extension PersistenceController {
     }
     
     func printEntityCounts() {
-        let container = persistentCloudKitContainer
-        let taskContext = container.newTaskContext()
-        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        
-        taskContext.performAndWait {
+        performAndWait { taskContext in
             do {
-                let model = container.managedObjectModel
+                let model = persistentCloudKitContainer.managedObjectModel
                 for (entityName, _) in model.entitiesByName {
                     let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
                     let count = try taskContext.count(for: request)
@@ -243,6 +235,147 @@ extension PersistenceController {
                 ALog(level: .error, "\(#function) failed to get entity counts: \(error)")
             }
         }
+    }
+    
+    func reciprocateShares() {
+        performAndWait { taskContext in
+            do {
+                try getOwnersWhoHaveSharedWithMe { result in
+                    switch result {
+                    case .success(let participants):
+                        ALog("reciprocate to: \(participants)")
+                        if participants.isEmpty {
+                            return
+                        }
+                        self.reciprocateShares(participants)
+                    case .failure(let error):
+                        ALog(level: .error, "Failed to get owners who shared with me: \(error)")
+                    }
+                }
+            } catch {
+                ALog(level: .error, "\(#function) failed to get entity counts: \(error)")
+            }
+        }
+    }
+    
+    func reciprocateShares(_ participants: [CKShare.Participant]) {
+        performAndWait { taskContext in
+            guard let history = getOwnHistory() else {
+                ALog(level: .warning, "Couldn't get own history")
+                return
+            }
+            if let share = getShare(for: history) {
+                configure(share: share, with: history)
+                reciprocateShares(participants, share)
+                return
+            }
+            shareObject(history, to: nil) {
+                share, error in
+                if let share = share {
+                    self.configure(share: share, with: history)
+                    self.reciprocateShares(participants, share)
+                }
+                if let error = error {
+                    ALog(level: .error, "Failed to share History: \(error)")
+                }
+            }
+        }
+    }
+
+    func reciprocateShares(_ participants: [CKShare.Participant], _ share: CKShare) {
+        let participants = participants.filter { participantToAdd in
+            return !share.participants.contains { participantInShare in
+                guard let li0 = participantInShare.userIdentity.lookupInfo,
+                    let li1 = participantToAdd.userIdentity.lookupInfo else
+                {
+                    return false
+                }
+                return li0 == li1
+            }
+        }
+        if participants.isEmpty {
+            ALog("No participants need share reciprocate")
+            return
+        }
+        for participant in participants {
+            participant.permission = .readWrite
+            ALog("Add participant \(participant) to history share")
+            share.addParticipant(participant)
+        }
+        self.persistentCloudKitContainer.persistUpdatedShare(share, in: self.privatePersistentStore) { (share, error) in
+            if let error = error {
+                ALog(level: .error, "Failed to persist updated share: \(error)")
+            }
+        }
+    }
+
+    func getOwnersWhoHaveSharedWithMe(completion: @escaping (Result<[CKShare.Participant], Error>) -> Void) throws {
+        let request = History.fetchRequest()
+        var ownersThatArentMe = [CKShare.Participant]()
+        var participantsIveSharedWith = [CKShare.Participant]()
+        for history in try request.execute() {
+            guard let share = getShare(for: history) else {
+                continue
+            }
+            let isMe = share.owner == share.currentUserParticipant
+            if isMe {
+                for participant in share.participants {
+                    if participant != share.currentUserParticipant
+                        && participant.userIdentity.lookupInfo != nil
+                    {
+                        participantsIveSharedWith.append(participant)
+                    }
+                }
+            } else {
+                ownersThatArentMe.append(share.owner)
+            }
+        }
+        for participant in participantsIveSharedWith {
+            if let index = ownersThatArentMe.firstIndex(of: participant) {
+                ownersThatArentMe.remove(at: index)
+            }
+        }
+        
+        // Recreate the participants as "neutral" ones
+        let lookup = ownersThatArentMe.map { $0.userIdentity.lookupInfo! }
+        fetchParticipants(for: lookup, completion: completion)
+    }
+    
+    func fetchParticipants(for lookupInfos: [CKUserIdentity.LookupInfo],
+        completion: @escaping (Result<[CKShare.Participant], Error>) -> Void) {
+
+        var participants = [CKShare.Participant]()
+            
+        // Create the operation using the lookup objects
+        // that the caller provides to the method.
+        let operation = CKFetchShareParticipantsOperation(
+            userIdentityLookupInfos: lookupInfos)
+            
+        // Collect the participants as CloudKit generates them.
+        operation.perShareParticipantResultBlock = { info, result in
+            switch result {
+            case .failure(let error):
+                ALog("error getting participant for \(info): \(error)")
+            case .success(let participant):
+                participants.append(participant)
+            }
+        }
+            
+        // If the operation fails, return the error to the caller.
+        // Otherwise, return the array of participants.
+        operation.fetchShareParticipantsResultBlock = { result in
+            switch result {
+            case .failure(let error):
+                completion(.failure(error))
+            case .success(_):
+                completion(.success(participants))
+            }
+        }
+            
+        // Set an appropriate QoS and add the operation to the
+        // container's queue to execute it.
+        operation.qualityOfService = .userInitiated
+        CKContainer.default().add(operation)
     }
 
     func fetchShareMetadata(for shareURLs: [URL],

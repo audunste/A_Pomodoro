@@ -10,6 +10,13 @@ import CoreData
 
 extension PomodoroEntry {
 
+    var isMine: Bool {
+        guard let history = self.task?.category?.history else {
+            return true
+        }
+        return history.isMine
+    }
+
     func getRemaining(at date: Date = Date()) -> Double {
         guard let startDate = self.startDate else {
             return 0

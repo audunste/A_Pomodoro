@@ -61,6 +61,7 @@
 		54AE15992974D36100BBFDA2 /* Task+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE15982974D36100BBFDA2 /* Task+Util.swift */; };
 		54AE159E2976487D00BBFDA2 /* NSManagedObject+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE159D2976487D00BBFDA2 /* NSManagedObject+Util.swift */; };
 		54AE15A129764B3C00BBFDA2 /* ALog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE15A029764B3C00BBFDA2 /* ALog.swift */; };
+		54AE15A3297C435100BBFDA2 /* Persistence+Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE15A2297C435000BBFDA2 /* Persistence+Util.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -131,6 +132,7 @@
 		54AE15982974D36100BBFDA2 /* Task+Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Task+Util.swift"; sourceTree = "<group>"; };
 		54AE159D2976487D00BBFDA2 /* NSManagedObject+Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObject+Util.swift"; sourceTree = "<group>"; };
 		54AE15A029764B3C00BBFDA2 /* ALog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ALog.swift; sourceTree = "<group>"; };
+		54AE15A2297C435000BBFDA2 /* Persistence+Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Persistence+Util.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -276,6 +278,7 @@
 				546754732953350600EA7F5E /* TimerType.swift */,
 				5467543D2953343800EA7F5E /* Persistence.swift */,
 				5460DF4229549AEB00D00E0E /* Persistence+History.swift */,
+				54AE15A2297C435000BBFDA2 /* Persistence+Util.swift */,
 				54AE158D296F7E3F00BBFDA2 /* Persistence+Share.swift */,
 				54AE158F297374E700BBFDA2 /* Persistence+Defaults.swift */,
 				5460DF762955A89100D00E0E /* Persistence+Entities.swift */,
@@ -521,6 +524,7 @@
 				546754752953350700EA7F5E /* AppColor.swift in Sources */,
 				542AFD0A295C87EA004B53F9 /* ButtonStyles.swift in Sources */,
 				54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */,
+				54AE15A3297C435100BBFDA2 /* Persistence+Util.swift in Sources */,
 				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
 				54AE15972974D2AF00BBFDA2 /* Category+Util.swift in Sources */,
 				54AE158E296F7E3F00BBFDA2 /* Persistence+Share.swift in Sources */,

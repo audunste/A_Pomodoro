@@ -9,35 +9,13 @@ import CoreData
 import CloudKit
 import UIKit
 
-extension CKContainer {
-    func getCurrentUserName() {
-        CKContainer.default().requestApplicationPermission(.userDiscoverability) { (status, error) in
-            CKContainer.default().fetchUserRecordID { (record, error) in
-                CKContainer.default().discoverUserIdentity(withUserRecordID: record!, completionHandler: { (userID, error) in
-                    print(userID?.hasiCloudAccount)
-                    print(userID?.lookupInfo?.phoneNumber)
-                    print(userID?.lookupInfo?.emailAddress)
-                    print((userID?.nameComponents?.givenName)! + " " + (userID?.nameComponents?.familyName)!)
-                })
-            }
-        }
-    }
-}
-
 extension PersistenceController {
 
     func presentCloudSharingController() {
-        do {
-            try persistentCloudKitContainer.viewContext.performAndWait {
-                let request = History.fetchRequest()
-                let histories = try request.execute()
-                if histories.count > 0 {
-                    // TODO handle multiple histories
-                    presentCloudSharingController(history: histories[0])
-                }
+        persistentCloudKitContainer.viewContext.performAndWait {
+            if let history = getOwnHistory() {
+                presentCloudSharingController(history: history)
             }
-        } catch {
-            fatalError("#\(#function): error: \(error)")
         }
     }
     func presentCloudSharingController(history: History) {
@@ -120,8 +98,7 @@ extension PersistenceController: UICloudSharingControllerDelegate {
      */
     func cloudSharingControllerDidStopSharing(_ csc: UICloudSharingController) {
         if let share = csc.share {
-            self.pomodoroHistoryShare = nil
-            purgeObjectsAndRecords(with: share)
+            unshareObjectsAndRecords(with: share)
         }
     }
 
@@ -148,7 +125,7 @@ extension PersistenceController: UICloudSharingControllerDelegate {
 extension PersistenceController {
     
     func getShare(for object: NSManagedObject) -> CKShare? {
-        var objectIDs = [object.objectID]
+        let objectIDs = [object.objectID]
         let result = try? persistentCloudKitContainer.fetchShares(matching: objectIDs)
         return result?.values.first
     }
@@ -194,6 +171,23 @@ extension PersistenceController {
             }
         }
     }
+    
+    func unshareObjectsAndRecords(with share: CKShare) {
+        performAndWait { context in
+            guard let history = getOwnHistory(), let historyShare = getShare(for: history) else {
+                ALog(level: .error, "No shared own history when unsharing")
+                return
+            }
+            if share.recordID != historyShare.recordID {
+                ALog(level: .error, "Trying to unshare something that isn't the own history share. Not supported")
+                return
+            }
+            ALog("")
+            let _ = history.clone(into: context)
+            context.delete(history)
+            context.saveAndLogError()
+        }
+    }
 
     func share(with title: String) -> CKShare? {
         let stores = [privatePersistentStore, sharedPersistentStore]
@@ -208,8 +202,8 @@ extension PersistenceController {
         return shares?.map { $0.title } ?? []
     }
     
-    private func configure(share: CKShare, with history: History? = nil) {
-        share[CKShare.SystemFieldKey.title] = "Pomodoro log"
+    func configure(share: CKShare, with history: History? = nil) {
+        share[CKShare.SystemFieldKey.title] = NSLocalizedString("Pomodoro history", comment: "Default name of share")
         // TODO thumbnail
     }
     

@@ -24,13 +24,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
         UNUserNotificationCenter.current().delegate = self
         #if !InitializeCloudKitSchema
         DispatchQueue.global(qos: .userInitiated).async {
-            //PersistenceController.shared.startOver()
-            PersistenceController.shared.makeSureDefaultsExist()
-            //PersistenceController.shared.updatePomodoroShares()
+            let controller = PersistenceController.shared
+            //controller.startOver()
+            controller.makeSureDefaultsExist()
+            //controller.updatePomodoroShares()
+            controller.reciprocateShares()
+            controller.fixHistoryShare()
             Thread.sleep(forTimeInterval: 5.0)
-            PersistenceController.shared.printEntityCounts()
+            controller.printEntityCounts()
             Thread.sleep(forTimeInterval: 5.0)
-            PersistenceController.shared.printEntityCounts()
+            controller.printEntityCounts()
+            
+            /*
+            if let url = URL(string: "https://www.icloud.com/share/071MGEttkRgkJmEtpqzi7p9yw#Pomodoro_history") {
+                UIApplication.shared.open(url)
+            } */
         }
         #endif
         return true

@@ -11,6 +11,23 @@ import CloudKit
 
 extension PersistenceController {
 
+    func getOwnHistory() -> History? {
+        let request = History.fetchRequest()
+        guard let histories = try? request.execute() else {
+            return nil
+        }
+        for history in histories {
+            if let share = getShare(for: history) {
+                if share.owner == share.currentUserParticipant {
+                    return history
+                }
+                continue
+            }
+            return history
+        }
+        return nil
+    }
+
     func addPomodoroEntry(
         timeSeconds: Double,
         timerType: String,
@@ -139,63 +156,4 @@ extension PersistenceController {
         return history
     }
             
-    /*
-    func updatePomodoroShares() {
-        let fetchRequest = PomodoroEntry.fetchRequest()
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "startDate", ascending: true)]
-        fetchRequest.predicate = NSPredicate(format:"startDate != nil AND timerType == 'pomodoro'", NSDate())
-        
-        let container = persistentCloudKitContainer
-        let taskContext = container.newTaskContext()
-        taskContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-        
-        taskContext.performAndWait {
-            do {
-                let entries = try fetchRequest.execute()
-                let shareDict = try container.fetchShares(matching: entries.map{ $0.objectID })
-                var alreadySharedCount = 0
-                var shareConflictCount = 0
-                var unsharedEntries = [NSManagedObject]()
-                for entry in entries {
-                    let share = shareDict[entry.objectID]
-                    if share != nil {
-                        alreadySharedCount += 1
-                        if self.pomodoroHistoryShare == nil {
-                            self.pomodoroHistoryShare = share
-                            ALog("share publicPermission: \(share!.publicPermission)")
-                        } else {
-                            if share?.title != self.pomodoroHistoryShare?.title {
-                                shareConflictCount += 1
-                            }
-                        }
-                        continue
-                    }
-                    unsharedEntries.append(entry)
-                }
-                ALog("updatePomodoroShares alreadyShared:\(alreadySharedCount) conflicts:\(shareConflictCount)")
-                if unsharedEntries.isEmpty {
-                    ALog("updatePomodoroShares no unshared entries")
-                    return
-                }
-                self.sharePomodoroHistoryEntries(unsharedEntries)
-            } catch {
-                fatalError("#\(#function): error: \(error)")
-            }
-        }
-    }
-    */
-    
-    private func sharePomodoroHistoryEntries(_ unsharedEntries: [NSManagedObject]) {
-        self.shareObjects(unsharedEntries, to: self.pomodoroHistoryShare) {
-            share, error in
-            if error != nil {
-                ALog(level: .error, "updatePomodoroShares failed to share unshared entries with error: \(error!)")
-                return
-            }
-            if self.pomodoroHistoryShare == nil {
-                self.pomodoroHistoryShare = share
-            }
-            ALog("shared \(unsharedEntries.count) new entries")
-        }
-    }
 }

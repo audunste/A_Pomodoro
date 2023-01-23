@@ -11,6 +11,7 @@ struct UnstyledButton: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .opacity(configuration.isPressed ? 0.5 : 1)
+            .contentShape(Rectangle())
     }
 }
 

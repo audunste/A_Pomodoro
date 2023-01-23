@@ -105,8 +105,8 @@ struct HeaderItem: View {
                 }
             }
         }
-        .buttonStyle(UnstyledButton())
         .background(Color(white: isSelected ? 0.0 : 1.0, opacity: 0.07))
+        .buttonStyle(UnstyledButton())
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .cornerRadius(16)
     }

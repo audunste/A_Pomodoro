@@ -31,7 +31,6 @@ class PersistenceController: NSObject, ObservableObject {
 
     @Published var activeTaskId: NSManagedObjectID?
 
-    var pomodoroHistoryShare: CKShare?
     var inMemory: Bool = false
 
     func getActiveTask(context: NSManagedObjectContext) -> Task? {

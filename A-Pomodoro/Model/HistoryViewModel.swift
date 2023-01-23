@@ -160,6 +160,11 @@ class HistoryViewModel: ObservableObject {
                     urls.append(url)
                 }
             }
+            
+            if urls.isEmpty {
+                completion(.success([History : String]()))
+                return
+            }
 
             PersistenceController.shared.fetchShareMetadata(for: urls) {
                 result in
