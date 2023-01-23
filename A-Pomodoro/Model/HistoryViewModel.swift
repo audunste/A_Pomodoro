@@ -41,12 +41,49 @@ class HistoryViewModel: ObservableObject {
             self.updatePeople()
         }
         .store(in: &cancelSet)
+        //NotificationCenter.default.addObserver(forName: .shareAccepted, object: nil, queue: .main) { n in
+        //}
         self.updatePeople()
     }
     
     func updatePeople() {
-        self.viewContext?.perform {
+        guard let viewContext = self.viewContext else {
+            return
+        }
+        if people.isEmpty {
+            self.people = [ Person(historyId: History(context: viewContext).objectID, name: "", pomodoroCount: 10, isYou: true)]
+            
+            viewContext.performAndWait {
+                self.doUpdateOwnHistory()
+            }
+            
+        }
+        /*
+        viewContext.perform {
             self.doUpdatePeople()
+        } */
+    }
+    
+    func doUpdateOwnHistory() {
+        let request = PomodoroEntry.fetchRequest()
+        request.predicate = NSPredicate(format:"(timerType == 'pomodoro') AND (startDate != nil)")
+        var pomodoroCount: Int = 0
+        var historyId: NSManagedObjectID? = nil
+        do {
+            let entries = try request.execute()
+            for entry in entries {
+                if entry.isMine {
+                    pomodoroCount += 1
+                    if historyId == nil {
+                        historyId = entry.task?.category?.history?.objectID
+                    }
+                }
+            }
+        } catch {
+            ALog("Error: \(error)")
+        }
+        if let historyId = historyId {
+            self.people = [ Person(historyId: historyId, name: "", pomodoroCount: pomodoroCount, isYou: true)]
         }
     }
     
@@ -149,6 +186,7 @@ class HistoryViewModel: ObservableObject {
     }
     
     func fetchNames(_ histories: [History], completion: @escaping (Result<[History: String], Error>) -> Void) {
+        ALog("histories.count: \(histories.count)")    
         do {
             let container = PersistenceController.shared.persistentCloudKitContainer
             let historyIDs = histories.map { $0.objectID }
@@ -179,21 +217,8 @@ class HistoryViewModel: ObservableObject {
                             ALog(level: .warning, "No metadata for share url \(url)")
                             continue
                         }
-                        if let nameComponents = metadata.ownerIdentity.nameComponents {
-                            let name = PersonNameComponentsFormatter.localizedString(from: nameComponents, style: .short)
-                            if name.count > 0 {
-                                result[history] = name
-                                continue
-                            }
-                        }
-                        if let emailAddress = metadata.ownerIdentity.lookupInfo?.emailAddress {
-                            var name = emailAddress
-                            if let i = emailAddress.firstIndex(of: "@") {
-                                name = String(emailAddress.prefix(upTo: i))
-                            }
-                            if name.count > 0 {
-                                result[history] = name
-                            }
+                        if let name = Self.nameFrom(metadata: metadata) {
+                            result[history] = name
                         }
                     }
                     completion(.success(result))
@@ -205,6 +230,25 @@ class HistoryViewModel: ObservableObject {
         } catch {
             completion(.failure(error))
         }
+    }
+    
+    static func nameFrom(metadata: CKShare.Metadata) -> String? {
+        if let nameComponents = metadata.ownerIdentity.nameComponents {
+            let name = PersonNameComponentsFormatter.localizedString(from: nameComponents, style: .short)
+            if name.count > 0 {
+                return name
+            }
+        }
+        if let emailAddress = metadata.ownerIdentity.lookupInfo?.emailAddress {
+            var name = emailAddress
+            if let i = emailAddress.firstIndex(of: "@") {
+                name = String(emailAddress.prefix(upTo: i))
+            }
+            if name.count > 0 {
+                return name
+            }
+        }
+        return nil
     }
 }
 

@@ -53,8 +53,11 @@ class PersistenceController: NSObject, ObservableObject {
         var result = PersistenceController(inMemory: true)
         var viewContext = result.persistentContainer.viewContext
         
+        let history = History(context: viewContext)
+        
         let catWork = Category(context: viewContext)
         catWork.title = "Work"
+        catWork.history = history
         let workTask0 = Task(context: viewContext)
         workTask0.category = catWork
         let workTask1 = Task(context: viewContext)
@@ -63,6 +66,7 @@ class PersistenceController: NSObject, ObservableObject {
         
         let catHobbyProgramming = Category(context: viewContext)
         catHobbyProgramming.title = "Hobby programming"
+        catHobbyProgramming.history = history
         let hobbyTask0 = Task(context: viewContext)
         hobbyTask0.category = catHobbyProgramming
         let hobbyTask1 = Task(context: viewContext)
@@ -76,7 +80,7 @@ class PersistenceController: NSObject, ObservableObject {
             workTask0, workTask1, hobbyTask0, hobbyTask1, hobbyTask2
         ]
         
-        for i in 0..<60 {
+        for i in 0..<50 {
             let newItem = PomodoroEntry(context: viewContext)
             let ago: Double = TimeInterval.hour * 5 * (Double(i) - Double.random(min: 0, max: 4))
             newItem.startDate = Date() - ago

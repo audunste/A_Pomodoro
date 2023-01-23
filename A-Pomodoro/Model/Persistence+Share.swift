@@ -5,9 +5,47 @@
 //  Created by Audun Steinholm on 12/01/2023.
 //
 
+import Foundation
 import CoreData
 import CloudKit
 import UIKit
+import ObjectiveC.runtime
+
+
+extension Notification.Name {
+    static let shareAccepted = Notification.Name("shareAccepted")
+    static let cloudSharingViewDidAppear = Notification.Name("cloudSharingViewDidAppear")
+}
+
+
+extension UICloudSharingController {
+
+    typealias ViewWillAppearRef = @convention(c)(UICloudSharingController, Selector, Bool) -> Void
+    private static let viewDidAppearSelector = #selector(UICloudSharingController.viewDidAppear(_:))
+    
+    static func swizzle() {
+        guard let originalMethod = class_getInstanceMethod(Self.self, viewDidAppearSelector) else {
+            ALog(level: .warning, "Could not find viewDidAppear selector to swizzle")
+            return
+        }
+
+        var originalIMP: IMP? = nil
+        
+        let swizzledBlock: @convention(block) (UICloudSharingController, Bool) -> Void = { receiver, animated in
+            if let originalIMP = originalIMP {
+                let castedIMP = unsafeBitCast(originalIMP, to: ViewWillAppearRef.self)
+                castedIMP(receiver, viewDidAppearSelector, animated)
+            }
+            guard type(of: receiver) == UICloudSharingController.self else {
+                return
+            }
+            NotificationCenter.default.post(name: .cloudSharingViewDidAppear, object: nil)
+        }
+        
+        let swizzledIMP = imp_implementationWithBlock(unsafeBitCast(swizzledBlock, to: AnyObject.self))
+        originalIMP = method_setImplementation(originalMethod, swizzledIMP)
+    }
+}
 
 extension PersistenceController {
 
@@ -42,6 +80,7 @@ extension PersistenceController {
          */
         if let viewController = rootViewController {
             sharingController.modalPresentationStyle = .formSheet
+            ALog("before present")
             viewController.present(sharingController, animated: true)
         }
     }

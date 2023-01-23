@@ -403,6 +403,7 @@
 				TargetAttributes = {
 					546754372953343800EA7F5E = {
 						CreatedOnToolsVersion = 14.0.1;
+						LastSwiftMigration = 1420;
 					};
 					5467544D2953343A00EA7F5E = {
 						CreatedOnToolsVersion = 14.0.1;
@@ -792,6 +793,7 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "iOSAppIconGreen iOSAppIconBlue";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "A-Pomodoro/A_Pomodoro.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -821,6 +823,7 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -832,6 +835,7 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "iOSAppIconGreen iOSAppIconBlue";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "A-Pomodoro/A_Pomodoro.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

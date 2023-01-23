@@ -19,9 +19,7 @@ struct A_PomodoroApp: App {
     @StateObject private var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
         container: PersistenceController.shared.persistentContainer,
         sortKey: "startDate") { $0.isMine }
-
-    init() {
-    }
+    @StateObject private var historyViewModel = HistoryViewModel()
 
     var body: some Scene {
         #if InitializeCloudKitSchema
@@ -38,7 +36,11 @@ struct A_PomodoroApp: App {
                     .environment(\.mainWindowSize, geometry.size)
                     .environmentObject(modelData)
                     .environmentObject(lastPomodoroEntryBinder)
+                    .environmentObject(historyViewModel)
                     .preferredColorScheme(.dark)
+            }
+            .onAppear() {
+                historyViewModel.viewContext = persistentContainer.viewContext
             }
         }
         #if os(macOS)

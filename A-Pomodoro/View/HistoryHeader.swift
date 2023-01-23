@@ -48,6 +48,9 @@ struct HistoryHeader: View {
                             width: Self.getItemWidth(index, viewModel.people.count, w),
                             height: 56)
                     }
+                    if viewModel.people.isEmpty {
+                        Text("Empty people array")
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.leading, 16)

@@ -22,6 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
             }
         }
         UNUserNotificationCenter.current().delegate = self
+        UICloudSharingController.swizzle()
         #if !InitializeCloudKitSchema
         DispatchQueue.global(qos: .userInitiated).async {
             let controller = PersistenceController.shared
@@ -85,6 +86,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 ALog(level: .error, "Failed to accept share invitations: \(error)")
             } else {
                 ALog("share accept success?")
+                let li = cloudKitShareMetadata.ownerIdentity.lookupInfo
+                var userInfo = [String:Any]()
+                if let li = cloudKitShareMetadata.ownerIdentity.lookupInfo {
+                    userInfo["lookupInfo"] = li
+                }
+                if let name = HistoryViewModel.nameFrom(metadata: cloudKitShareMetadata) {
+                    userInfo["name"] = name
+                }
+                NotificationCenter.default.post(name: .shareAccepted, object: nil, userInfo: userInfo)
             }
         }
     }

@@ -6,10 +6,16 @@
 //
 
 import SwiftUI
+import CloudKit
 
 enum SheetType: String {
     case none
     case history
+}
+
+enum OverlayType: String {
+    case none
+    case preparingShare
 }
 
 extension GeometryProxy {
@@ -26,8 +32,9 @@ struct ContentView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var selection: TimerType = .pomodoro
     @State private var sheet: SheetType = .none
-    @State private var popover: Bool = true
+    @State private var overlay: OverlayType = .none
     @AppStorage("focusAndBreakStage") private var focusAndBreakStage = -1
+    @State private var overlayScheme: ColorScheme = .dark
     
     var body: some View {
         GeometryReader { geometry in
@@ -101,6 +108,18 @@ struct ContentView: View {
                         updateSelection(stage: focusAndBreakStage)
                     }
                     updateAppColors(selection)
+                    overlayScheme = getSystemColorScheme()
+                    NotificationCenter.default.addObserver(forName: .cloudSharingViewDidAppear, object: nil, queue: OperationQueue.main) { n in
+                        ALog("UICloudSharingController.viewDidAppear")
+                        self.overlay = .none
+                    }
+                    NotificationCenter.default.addObserver(forName: .shareAccepted, object: nil, queue: OperationQueue.main) { n in
+                        self.sheet = .history
+                        ALog(".shareAccepted")
+                        if let sharer = n.userInfo?["lookupInfo"] as? CKUserIdentity.LookupInfo {
+                            ALog("Found sharer \(sharer)")
+                        }
+                    }
                 }
                 .onChange(of: focusAndBreakStage) {
                     stage in
@@ -121,23 +140,27 @@ struct ContentView: View {
             }
             .frame(height: 56)
         }
-        //.blur(radius: 4)
-        /*
-        .popover(isPresented: $popover) {
-            ZStack {
-            
-                ProgressView {
-                    Text("Preparing share...")
+        .blur(radius: overlay == .none ? 0 : 4)
+        .overlay {
+            switch overlay {
+            case .preparingShare:
+                ZStack {
+                    Color("Background").opacity(0.001)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
+                    ProgressView {
+                        Text("Preparing share...")
+                        .foregroundColor(Color("PrimaryText"))
+                    }
+                    .padding(32)
+                    .background(.thinMaterial.shadow(.drop(radius: 2)), in: RoundedRectangle(cornerRadius: 16))
                 }
-                .padding(32)
-                //.foregroundColor(.black)
-                .background(.regularMaterial.shadow(.drop(radius: 2)), in: RoundedRectangle(cornerRadius: 16))
+                .background(.clear)
+                .environment(\.colorScheme, overlayScheme)
+            default:
+                Color.clear
             }
-            .background(.clear)
-            .preferredColorScheme(.light)
-        
         }
-        */
         .sheet(isPresented: isSheetPresented) {
             switch sheet {
             case .history:
@@ -151,6 +174,10 @@ struct ContentView: View {
                     sheet = .none
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         PersistenceController.shared.presentCloudSharingController()
+                    }
+                    overlay = .preparingShare
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                        self.overlay = .none
                     }
                 })
                 #endif
@@ -204,6 +231,7 @@ struct ContentView: View {
 
     func updateAppColors(_ newSelection: TimerType) {
         let scheme = getSystemColorScheme()
+        ALog("scheme: \(scheme)")
         withAnimation(.easeInOut(duration: 0.2)) {
             switch (scheme) {
             case .dark:

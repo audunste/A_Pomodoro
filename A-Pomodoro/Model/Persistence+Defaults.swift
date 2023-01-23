@@ -342,8 +342,9 @@ extension PersistenceController {
     }
     
     func fetchParticipants(for lookupInfos: [CKUserIdentity.LookupInfo],
-        completion: @escaping (Result<[CKShare.Participant], Error>) -> Void) {
-
+        completion: @escaping (Result<[CKShare.Participant], Error>) -> Void)
+    {
+        ALog("lookupInfos.count: \(lookupInfos.count)")
         var participants = [CKShare.Participant]()
             
         // Create the operation using the lookup objects
@@ -381,6 +382,7 @@ extension PersistenceController {
     func fetchShareMetadata(for shareURLs: [URL],
         completion: @escaping (Result<[URL: CKShare.Metadata], Error>) -> Void)
     {
+        ALog("\(shareURLs)")
         var cache = [URL: CKShare.Metadata]()
             
         // Create the fetch operation using the share URLs that
@@ -398,6 +400,7 @@ extension PersistenceController {
         operation.perShareMetadataResultBlock = { url, result in
             switch result {
             case .success(let metadata):
+                ALog("\(metadata)")
                 cache[url] = metadata
             default:
                 ALog("No metadata")
