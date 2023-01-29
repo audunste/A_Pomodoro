@@ -1,5 +1,14 @@
 /* No comment provided by engineer. */
-"Count on day %@: %lld" = "Antall på %@: %lld";
+"Close" = "Lukk";
+
+/* No comment provided by engineer. */
+"Empty people array" = "Laster...";
+
+/* No comment provided by engineer. */
+"Loading shared history via iCloud.\n\nThis can take anywhere from a few seconds to several minutes." = "Laster delt historikk gjennom iCloud.\n\nDette kan ta alt fra noen sekunder til flere minutter.";
+
+/* Status on recently accepted share while data is being loaded */
+"Loading..." = "Laster...";
 
 /* Name of long break timer */
 "Long break" = "Lang pause";

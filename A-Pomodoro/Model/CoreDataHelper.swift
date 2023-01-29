@@ -20,7 +20,7 @@ extension NSPersistentContainer {
 }
     
 extension NSPersistentCloudKitContainer {
-    #if os(iOS)
+//    #if os(iOS)
     /**
      Fetch and return shares in the persistent stores.
      */
@@ -37,7 +37,7 @@ extension NSPersistentCloudKitContainer {
         }
         return results
     }
-    #endif
+//    #endif
 }
 
 extension NSManagedObjectContext {

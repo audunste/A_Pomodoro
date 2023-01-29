@@ -88,7 +88,9 @@ struct HeaderItem: View {
                     .padding(.top, 8)
                     .padding(.leading, 16)
                     
-                    Text(String(format: NSLocalizedString("%d pomodoro(s)", comment: "Number of pomodoros finished"), person.pomodoroCount))
+                    Text(person.id == HistoryViewModel.recentlyAcceptShareId
+                        ? NSLocalizedString("Loading...", comment: "Status on recently accepted share while data is being loaded")
+                        : String(format: NSLocalizedString("%d pomodoro(s)", comment: "Number of pomodoros finished"), person.pomodoroCount))
                     .font(.system(size: smallFontSize, weight: .regular))
                     .frame(alignment: .topLeading)
                     .padding(.top, 8)

@@ -12,8 +12,11 @@ import CloudKit
 
 class HistoryViewModel: ObservableObject {
     
-    @Published var people: [Person] = []
-    @Published var activeId: NSManagedObjectID?
+    @Published public private(set) var people: [Person] = []
+    @Published var activeId: String?
+    
+    static let recentlyAcceptShareId: String = "recentlyAcceptShareId"
+    var recentlyAcceptedShare: (String, CKUserIdentity.LookupInfo, Date)? = nil
     
     var cancelSet: Set<AnyCancellable> = []
 
@@ -41,9 +44,41 @@ class HistoryViewModel: ObservableObject {
             self.updatePeople()
         }
         .store(in: &cancelSet)
-        //NotificationCenter.default.addObserver(forName: .shareAccepted, object: nil, queue: .main) { n in
-        //}
+        NotificationCenter.default.addObserver(forName: .shareAccepted, object: nil, queue: .main) { n in
+            guard let userInfo = n.userInfo else {
+                ALog(level: .warning, "No userInfo with .shareAccepted event")
+                return
+            }
+            guard let lookupInfo = userInfo["lookupInfo"] as? CKUserIdentity.LookupInfo,
+                let name = userInfo["name"] as? String else
+            {
+                ALog(level: .warning, "No lookupInfo or name with .shareAccepted event")
+                return
+            }
+            self.shareAccepted(name: name, lookupInfo: lookupInfo)
+        }
         self.updatePeople()
+    }
+    
+    func shareAccepted(name: String, lookupInfo: CKUserIdentity.LookupInfo) {
+        self.recentlyAcceptedShare = (name, lookupInfo, Date())
+        self.activeId = Self.recentlyAcceptShareId
+        self.updatePeople()
+    }
+    
+    func setPeople(_ people: [Person], _ removeRecentlyAcceptedShareInFavourOf: NSManagedObjectID? = nil) {
+        if let objectId = removeRecentlyAcceptedShareInFavourOf {
+            recentlyAcceptedShare = nil
+            activeId = objectId.uriRepresentation().absoluteString
+        }
+        if let (name, _, _) = recentlyAcceptedShare {
+            let tempPerson = Person(id: Self.recentlyAcceptShareId, name: name, pomodoroCount: 0)
+            var modPeople = people
+            modPeople.insert(tempPerson, at: min(modPeople.count, 1))
+            self.people = modPeople
+        } else {
+            self.people = people
+        }
     }
     
     func updatePeople() {
@@ -51,17 +86,14 @@ class HistoryViewModel: ObservableObject {
             return
         }
         if people.isEmpty {
-            self.people = [ Person(historyId: History(context: viewContext).objectID, name: "", pomodoroCount: 10, isYou: true)]
-            
             viewContext.performAndWait {
                 self.doUpdateOwnHistory()
             }
-            
         }
-        /*
+        
         viewContext.perform {
             self.doUpdatePeople()
-        } */
+        }
     }
     
     func doUpdateOwnHistory() {
@@ -83,7 +115,7 @@ class HistoryViewModel: ObservableObject {
             ALog("Error: \(error)")
         }
         if let historyId = historyId {
-            self.people = [ Person(historyId: historyId, name: "", pomodoroCount: pomodoroCount, isYou: true)]
+            setPeople([ Person(historyId: historyId, name: "", pomodoroCount: pomodoroCount, isYou: true)])
         }
     }
     
@@ -173,15 +205,25 @@ class HistoryViewModel: ObservableObject {
             }
         }
         
+        var removeRecentlyAcceptedShareInFavourOf: NSManagedObjectID? = nil
+        
         for history in histories {
             let entries = entriesByHistory[history]
             let isYou = isYou(history)
             let name = isYou ? "" : nameByHistory[history]
+            if let recentLookupInfo = recentlyAcceptedShare?.1,
+                let share = shareByHistory[history]
+            {
+                ALog("\(String(describing: share.owner.userIdentity.lookupInfo)) \(String(describing: recentLookupInfo))")
+                if share.owner.userIdentity.lookupInfo == recentLookupInfo {
+                    removeRecentlyAcceptedShareInFavourOf = history.objectID
+                }
+            }
             people.append(Person(historyId: history.objectID, name: name ?? "", pomodoroCount: entries?.count ?? 0, isYou: isYou))
         }
         ALog("Updating \(people.count) people")
         DispatchQueue.main.async {
-            self.people = people
+            self.setPeople(people, removeRecentlyAcceptedShareInFavourOf)
         }
     }
     
@@ -253,13 +295,17 @@ class HistoryViewModel: ObservableObject {
 }
 
 struct Person: Identifiable, Hashable {
-    let id: NSManagedObjectID
+    let id: String
     let name: String
     let pomodoroCount: Int
     let isYou: Bool
-    
+
     init (historyId: NSManagedObjectID, name: String, pomodoroCount: Int, isYou: Bool = false) {
-        self.id = historyId
+        self.init(id: historyId.uriRepresentation().absoluteString, name: name, pomodoroCount: pomodoroCount, isYou: isYou)
+    }
+    
+    init (id: String, name: String, pomodoroCount: Int, isYou: Bool = false) {
+        self.id = id
         self.name = name
         self.pomodoroCount = pomodoroCount
         self.isYou = isYou

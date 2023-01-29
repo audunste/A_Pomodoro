@@ -8,8 +8,6 @@
 import Foundation
 import CoreData
 import CloudKit
-import UIKit
-import ObjectiveC.runtime
 
 
 extension Notification.Name {
@@ -17,6 +15,10 @@ extension Notification.Name {
     static let cloudSharingViewDidAppear = Notification.Name("cloudSharingViewDidAppear")
 }
 
+#if os(iOS)
+
+import UIKit
+import ObjectiveC.runtime
 
 extension UICloudSharingController {
 
@@ -46,6 +48,7 @@ extension UICloudSharingController {
         originalIMP = method_setImplementation(originalMethod, swizzledIMP)
     }
 }
+
 
 extension PersistenceController {
 
@@ -159,6 +162,8 @@ extension PersistenceController: UICloudSharingControllerDelegate {
         return csc.share?.title ?? NSLocalizedString("Pomodoro history", comment: "Default name of share")
     }
 }
+
+#endif
 
 
 extension PersistenceController {

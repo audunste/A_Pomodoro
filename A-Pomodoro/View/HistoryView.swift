@@ -7,7 +7,7 @@
 
 import SwiftUI
 import CoreData
-
+import CloudKit
 
 struct HistoryView: View {
     @Environment(\.managedObjectContext) var viewContext
@@ -42,7 +42,7 @@ struct HistoryView: View {
 }
 
 struct HistoryConfig {
-    let historyId: NSManagedObjectID?
+    let historyId: String?
     let fromDay: ADay
     let granularity: TimeInterval
 }
@@ -53,8 +53,16 @@ struct ConfiguredHistoryView: View {
     @Environment(\.managedObjectContext) var viewContext
     
     var history: History? {
-        if let id = config.historyId {
-            return try? viewContext.existingObject(with: id) as? History
+        guard let id = config.historyId else {
+            return nil
+        }
+        if id == HistoryViewModel.recentlyAcceptShareId {
+            return nil
+        }
+        if let url = URL(string: id),
+            let objectId = PersistenceController.active.persistentContainer.persistentStoreCoordinator.managedObjectID(forURIRepresentation: url)
+        {
+            return try? viewContext.existingObject(with: objectId) as? History
         }
         return nil
     }
@@ -180,6 +188,15 @@ struct FetchedHistoryView: View {
                             .padding(.leading, 16)
                             .padding(.top, 4)
                         }
+                        if config.historyId == HistoryViewModel.recentlyAcceptShareId {
+                            Text("Loading shared history via iCloud.\n\nThis can take anywhere from a few seconds to several minutes.")
+                            .font(.system(size: 14))
+                            .padding(.leading, 16)
+                            .padding(.top, 4)
+                            ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                        }
                         if maxCount == 0 {
                             Spacer()
                             .frame(maxWidth: .infinity)
@@ -232,28 +249,36 @@ class PreviewHistoryViewModel: HistoryViewModel {
     
     let peopleCount: Int
     
-    init(viewContext: NSManagedObjectContext, peopleCount: Int) {
+    init(viewContext: NSManagedObjectContext, peopleCount: Int, share: Bool = false) {
         self.peopleCount = peopleCount
         super.init(viewContext: viewContext)
+        if share {
+            DispatchQueue.main.async {
+                self.shareAccepted(name: "Anna", lookupInfo: CKUserIdentity.LookupInfo(emailAddress: "anna.steinholm@icloud.com"))
+            }
+        }
     }
     
     override func updatePeople() {
         super.updatePeople()
         switch peopleCount {
         case 2:
-            self.people = [
+            setPeople([
                 self.people[0],
                 Person(historyId: History(context: self.viewContext!).objectID, name: "Audun", pomodoroCount: 678)
-            ]
+            ])
         case 3:
-            self.people = [
+            setPeople([
                 self.people[0],
                 Person(historyId: History(context: self.viewContext!).objectID, name: "Audun", pomodoroCount: 678),
                 Person(historyId: History(context: self.viewContext!).objectID, name: "Tobias", pomodoroCount: 1782),
-            ]
+            ])
         default:
             return
         }
+    }
+    
+    override func doUpdatePeople() {
     }
 }
 
@@ -283,6 +308,13 @@ struct HistoryView_Previews: PreviewProvider {
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
         .environmentObject(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 3) as HistoryViewModel)
+
+        HistoryView()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .previewDisplayName("Accept share")
+        .withPreviewEnvironment("iPhone SE (3rd generation)")
+        .environment(\.managedObjectContext, persistentContainer.viewContext)
+        .environmentObject(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 3, share: true) as HistoryViewModel)
 
         HistoryView()
         .previewDisplayName("SE landscape")
