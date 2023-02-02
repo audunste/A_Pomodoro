@@ -39,6 +39,16 @@ class PersistenceController: NSObject, ObservableObject {
         }
         return nil
     }
+    
+    func getHistoryByObjectIdUrl(string: String?) -> History? {
+        guard let string = string,
+            let url = URL(string: string),
+            let objectId = persistentContainer.persistentStoreCoordinator.managedObjectID(forURIRepresentation: url)
+        else {
+            return nil
+        }
+        return try? persistentContainer.viewContext.existingObject(with: objectId) as? History
+    }
 
     static var active: PersistenceController {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
@@ -100,8 +110,8 @@ class PersistenceController: NSObject, ObservableObject {
         return result
     }()
     
-    var persistentCloudKitContainer: NSPersistentCloudKitContainer {
-        return self.persistentContainer as! NSPersistentCloudKitContainer
+    var persistentCloudKitContainer: NSPersistentCloudKitContainer? {
+        return self.persistentContainer as? NSPersistentCloudKitContainer
     }
 
     lazy var persistentContainer: NSPersistentContainer = {

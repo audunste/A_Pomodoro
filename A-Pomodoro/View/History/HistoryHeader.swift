@@ -58,8 +58,8 @@ struct HistoryHeader: View {
             }
             .scrollIndicators(.hidden)
             .frame(maxHeight: .infinity)
-            .background(modelData.appColor.backgroundColor)
-            .foregroundColor(modelData.appColor.textColor)
+            .background(Color("BarBackground"))
+            .foregroundColor(Color("BarText"))
         }
     }
 }

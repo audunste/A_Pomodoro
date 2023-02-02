@@ -13,11 +13,26 @@
 /* Name of long break timer */
 "Long break" = "Lang pause";
 
+/* Action */
+"Not now" = "Ikke nå";
+
 /* Pause button */
 "Pause" = "Pause";
 
 /* No comment provided by engineer. */
 "Pomodoro" = "Pomodoro";
+
+/* Default name of share */
+"Pomodoro history" = "Pomodoro historikk";
+
+/* No comment provided by engineer. */
+"Preparing share..." = "Forbereder deling...";
+
+/* Action */
+"Share" = "Del";
+
+/* When asked to reciprocate a share */
+"Share your own history with %@?" = "Del din egen historikk med %@?";
 
 /* Name of short break timer */
 "Short break" = "Kort pause";

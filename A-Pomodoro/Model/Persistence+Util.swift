@@ -11,7 +11,7 @@ import CoreData
 extension PersistenceController {
 
     func performAndWait(_ block: (NSManagedObjectContext) -> Void) {
-        let taskContext = persistentCloudKitContainer.newTaskContext()
+        let taskContext = persistentContainer.newTaskContext()
         taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         taskContext.performAndWait {
             block(taskContext)

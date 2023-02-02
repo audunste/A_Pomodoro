@@ -46,6 +46,8 @@
 		546754752953350700EA7F5E /* AppColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546754722953350600EA7F5E /* AppColor.swift */; };
 		546754762953350700EA7F5E /* TimerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546754732953350600EA7F5E /* TimerType.swift */; };
 		546754772953350700EA7F5E /* ModelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 546754742953350700EA7F5E /* ModelData.swift */; };
+		547A8DEA299804E70076AD8C /* ReciprocateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547A8DE9299804E70076AD8C /* ReciprocateView.swift */; };
+		547A8DEC299905FC0076AD8C /* CancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547A8DEB299905FC0076AD8C /* CancellationToken.swift */; };
 		547F632B296148F3008A83A5 /* Sparkle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632A296148F3008A83A5 /* Sparkle.swift */; };
 		547F632D29614980008A83A5 /* SparkleSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632C29614980008A83A5 /* SparkleSystem.swift */; };
 		547F632F2961516C008A83A5 /* MiscUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632E2961516C008A83A5 /* MiscUtil.swift */; };
@@ -116,6 +118,8 @@
 		546754722953350600EA7F5E /* AppColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppColor.swift; sourceTree = "<group>"; };
 		546754732953350600EA7F5E /* TimerType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimerType.swift; sourceTree = "<group>"; };
 		546754742953350700EA7F5E /* ModelData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModelData.swift; sourceTree = "<group>"; };
+		547A8DE9299804E70076AD8C /* ReciprocateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReciprocateView.swift; sourceTree = "<group>"; };
+		547A8DEB299905FC0076AD8C /* CancellationToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancellationToken.swift; sourceTree = "<group>"; };
 		547F632A296148F3008A83A5 /* Sparkle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sparkle.swift; sourceTree = "<group>"; };
 		547F632C29614980008A83A5 /* SparkleSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleSystem.swift; sourceTree = "<group>"; };
 		547F632E2961516C008A83A5 /* MiscUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiscUtil.swift; sourceTree = "<group>"; };
@@ -254,6 +258,7 @@
 		5467546C295334DB00EA7F5E /* View */ = {
 			isa = PBXGroup;
 			children = (
+				547A8DE8299804B60076AD8C /* History */,
 				5467546F295334FB00EA7F5E /* ContentView.swift */,
 				5467546E295334FB00EA7F5E /* TimerView.swift */,
 				542AFD03295A4F7C004B53F9 /* SquareZStack.swift */,
@@ -263,8 +268,6 @@
 				542AFD0D295E8349004B53F9 /* ViewUtil.swift */,
 				547F632A296148F3008A83A5 /* Sparkle.swift */,
 				547F632C29614980008A83A5 /* SparkleSystem.swift */,
-				547F63302964DEEA008A83A5 /* HistoryView.swift */,
-				54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -287,6 +290,16 @@
 				54AE1582296AD4CE00BBFDA2 /* HistoryViewModel.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		547A8DE8299804B60076AD8C /* History */ = {
+			isa = PBXGroup;
+			children = (
+				547F63302964DEEA008A83A5 /* HistoryView.swift */,
+				54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */,
+				547A8DE9299804E70076AD8C /* ReciprocateView.swift */,
+			);
+			path = History;
 			sourceTree = "<group>";
 		};
 		54AE15932974CF2E00BBFDA2 /* Entities */ = {
@@ -314,6 +327,7 @@
 				547F6334296820AF008A83A5 /* TimeUtil.swift */,
 				547F632E2961516C008A83A5 /* MiscUtil.swift */,
 				54AE15A029764B3C00BBFDA2 /* ALog.swift */,
+				547A8DEB299905FC0076AD8C /* CancellationToken.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -515,6 +529,7 @@
 				54AE15992974D36100BBFDA2 /* Task+Util.swift in Sources */,
 				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
 				546754772953350700EA7F5E /* ModelData.swift in Sources */,
+				547A8DEA299804E70076AD8C /* ReciprocateView.swift in Sources */,
 				547F632B296148F3008A83A5 /* Sparkle.swift in Sources */,
 				54675471295334FB00EA7F5E /* ContentView.swift in Sources */,
 				547F632D29614980008A83A5 /* SparkleSystem.swift in Sources */,
@@ -529,6 +544,7 @@
 				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
 				54AE15972974D2AF00BBFDA2 /* Category+Util.swift in Sources */,
 				54AE158E296F7E3F00BBFDA2 /* Persistence+Share.swift in Sources */,
+				547A8DEC299905FC0076AD8C /* CancellationToken.swift in Sources */,
 				5467543E2953343800EA7F5E /* Persistence.swift in Sources */,
 				546754762953350700EA7F5E /* TimerType.swift in Sources */,
 				546754412953343800EA7F5E /* A-Pomodoro.xcdatamodeld in Sources */,

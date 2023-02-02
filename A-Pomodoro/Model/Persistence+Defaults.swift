@@ -88,7 +88,9 @@ extension PersistenceController {
     
     func mergeHistories(_ context: NSManagedObjectContext) throws {
         // For now, simple check if there are two history entries
-        let container = self.persistentCloudKitContainer
+        guard let container = self.persistentCloudKitContainer else {
+            return
+        }
         let request = History.fetchRequest()
         let allHistories = try request.execute()
         let histories = allHistories.filter { $0.isMine }
@@ -221,7 +223,7 @@ extension PersistenceController {
     func printEntityCounts() {
         performAndWait { taskContext in
             do {
-                let model = persistentCloudKitContainer.managedObjectModel
+                let model = persistentContainer.managedObjectModel
                 for (entityName, _) in model.entitiesByName {
                     let request = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
                     let count = try taskContext.count(for: request)
@@ -233,6 +235,74 @@ extension PersistenceController {
                 ALog("CoreData has \(count) orphaned PomodoroEntry objects")
             } catch {
                 ALog(level: .error, "\(#function) failed to get entity counts: \(error)")
+            }
+        }
+    }
+    
+    func resetReciprocation() {
+        performAndWait { taskContext in
+            do {
+                try getOwnersWhoHaveSharedWithMe { result in
+                    switch result {
+                    case .success(let participants):
+                        ALog("maybe reset: \(participants)")
+                        if participants.isEmpty {
+                            return
+                        }
+                        self.resetReciprocation(participants)
+                    case .failure(let error):
+                        ALog(level: .error, "Failed to get owners who shared with me: \(error)")
+                    }
+                }
+            } catch {
+                ALog(level: .error, "\(#function) failed to get entity counts: \(error)")
+            }
+        }
+    }
+
+    func resetReciprocation(_ participants: [CKShare.Participant]) {
+        performAndWait { taskContext in
+            guard let history = getOwnHistory() else {
+                ALog(level: .warning, "Couldn't get own history")
+                return
+            }
+            if let share = getShare(for: history) {
+                configure(share: share, with: history)
+                resetReciprocation(participants, share)
+            }
+        }
+    }
+    
+    func resetReciprocation(_ participants: [CKShare.Participant], _ share: CKShare) {
+        guard let container = persistentCloudKitContainer else {
+            return
+        }
+        let participants = share.participants.filter { participantInShare in
+            return participantInShare.role != .owner && participants.contains { participantToMaybeRemove in
+                guard let li0 = participantInShare.userIdentity.lookupInfo,
+                    let li1 = participantToMaybeRemove.userIdentity.lookupInfo else
+                {
+                    return false
+                }
+                if li0 == li1 {
+                    if participantInShare.acceptanceStatus == .pending {
+                        return true
+                    }
+                }
+                return false
+            }
+        }
+        if participants.isEmpty {
+            ALog("No participants need reset")
+            return
+        }
+        for participant in participants {
+            ALog("Remove participant \(participant) from share")
+            share.removeParticipant(participant)
+        }
+        container.persistUpdatedShare(share, in: self.privatePersistentStore) { (share, error) in
+            if let error = error {
+                ALog(level: .error, "Failed to persist updated share: \(error)")
             }
         }
     }
@@ -283,12 +353,18 @@ extension PersistenceController {
     }
 
     func reciprocateShares(_ participants: [CKShare.Participant], _ share: CKShare) {
+        guard let container = persistentCloudKitContainer else {
+            return
+        }
         let participants = participants.filter { participantToAdd in
             return !share.participants.contains { participantInShare in
                 guard let li0 = participantInShare.userIdentity.lookupInfo,
                     let li1 = participantToAdd.userIdentity.lookupInfo else
                 {
                     return false
+                }
+                if li0 == li1 {
+                    ALog("Already reciprocated to \(li0)")
                 }
                 return li0 == li1
             }
@@ -302,7 +378,7 @@ extension PersistenceController {
             ALog("Add participant \(participant) to history share")
             share.addParticipant(participant)
         }
-        self.persistentCloudKitContainer.persistUpdatedShare(share, in: self.privatePersistentStore) { (share, error) in
+        container.persistUpdatedShare(share, in: self.privatePersistentStore) { (share, error) in
             if let error = error {
                 ALog(level: .error, "Failed to persist updated share: \(error)")
             }
@@ -382,7 +458,7 @@ extension PersistenceController {
     func fetchShareMetadata(for shareURLs: [URL],
         completion: @escaping (Result<[URL: CKShare.Metadata], Error>) -> Void)
     {
-        ALog("\(shareURLs)")
+        ALog("shareURLs.count: \(shareURLs.count)")
         var cache = [URL: CKShare.Metadata]()
             
         // Create the fetch operation using the share URLs that
@@ -400,7 +476,6 @@ extension PersistenceController {
         operation.perShareMetadataResultBlock = { url, result in
             switch result {
             case .success(let metadata):
-                ALog("\(metadata)")
                 cache[url] = metadata
             default:
                 ALog("No metadata")

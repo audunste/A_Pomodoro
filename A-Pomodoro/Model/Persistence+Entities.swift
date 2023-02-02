@@ -13,17 +13,19 @@ extension PersistenceController {
 
     func getOwnHistory() -> History? {
         let request = History.fetchRequest()
-        guard let histories = try? request.execute() else {
-            return nil
-        }
-        for history in histories {
-            if let share = getShare(for: history) {
-                if share.owner == share.currentUserParticipant {
-                    return history
+        do {
+            let histories = try request.execute()
+            for history in histories {
+                if let share = getShare(for: history) {
+                    if share.owner == share.currentUserParticipant {
+                        return history
+                    }
+                    continue
                 }
-                continue
+                return history
             }
-            return history
+        } catch {
+            ALog(level: .error, "Error getting own history \(error)")
         }
         return nil
     }

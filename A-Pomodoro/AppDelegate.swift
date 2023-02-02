@@ -28,8 +28,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
             let controller = PersistenceController.shared
             //controller.startOver()
             controller.makeSureDefaultsExist()
-            //controller.updatePomodoroShares()
-            controller.reciprocateShares()
+            //controller.resetReciprocation()
+            //controller.reciprocateShares()
             controller.fixHistoryShare()
             Thread.sleep(forTimeInterval: 5.0)
             controller.printEntityCounts()
@@ -80,13 +80,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         ALog("share incoming: \(String(describing: cloudKitShareMetadata))")
         let persistenceController = PersistenceController.shared
         let sharedStore = persistenceController.sharedPersistentStore
-        let container = persistenceController.persistentCloudKitContainer
+        guard let container = persistenceController.persistentCloudKitContainer else {
+            return
+        }
         container.acceptShareInvitations(from: [cloudKitShareMetadata], into: sharedStore) { (_, error) in
             if let error = error {
                 ALog(level: .error, "Failed to accept share invitations: \(error)")
             } else {
-                ALog("share accept success?")
-                let li = cloudKitShareMetadata.ownerIdentity.lookupInfo
+                ALog("Share accept success")
                 var userInfo = [String:Any]()
                 if let li = cloudKitShareMetadata.ownerIdentity.lookupInfo {
                     userInfo["lookupInfo"] = li

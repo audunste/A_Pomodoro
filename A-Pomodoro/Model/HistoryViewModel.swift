@@ -15,6 +15,22 @@ class HistoryViewModel: ObservableObject {
     @Published public private(set) var people: [Person] = []
     @Published var activeId: String?
     
+    var activePerson: Person? {
+        guard let activeId = activeId else {
+            return nil
+        }
+        for person in people {
+            if person.id == activeId {
+                return person
+            }
+        }
+        return nil
+    }
+    
+    var activeHistory: History? {
+        return PersistenceController.active.getHistoryByObjectIdUrl(string: activeId)
+    }
+    
     static let recentlyAcceptShareId: String = "recentlyAcceptShareId"
     var recentlyAcceptedShare: (String, CKUserIdentity.LookupInfo, Date)? = nil
     
@@ -35,12 +51,13 @@ class HistoryViewModel: ObservableObject {
         /*
         NotificationCenter.default.post(name: .pomodoroStoreDidChange, object: self, userInfo: userInfo)
         */
+        ALog("New HistoryViewModel")
         self.viewContext = viewContext
         NotificationCenter.default.publisher(for: .pomodoroStoreDidChange)
         .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: true)
         .sink {
             notification in
-            ALog("change in history view model")
+            ALog("Change in history view model")
             self.updatePeople()
         }
         .store(in: &cancelSet)
@@ -96,6 +113,79 @@ class HistoryViewModel: ObservableObject {
         }
     }
     
+    func reciprocateNotNow() {
+        // Make Reciprocate object on own History with active lookUpHash and no share url
+        let controller = PersistenceController.active
+        controller.persistentContainer.viewContext.performAndWait {
+            guard
+                let ownHistory = controller.getOwnHistory(),
+                let activeHistory = activeHistory,
+                let activeShare = controller.getShare(for: activeHistory),
+                let activeOwnerLookupInfoHash = activeShare.ownerLookupInfoHash
+            else {
+                ALog(level: .warning, "Could not get active history owner lookup info hash")
+                return
+            }
+            var reciprocation = Reciprocate(context: controller.persistentContainer.viewContext)
+            reciprocation.history = ownHistory
+            reciprocation.lookupInfoHash = activeOwnerLookupInfoHash
+            controller.persistentContainer.viewContext.saveAndLogError()
+        }
+    }
+    
+    func reciprocateShare() {
+        // Make sure own History has a persisted share,
+        // add the active share's owner as participant,
+        // then make Reciprocate object on own History with active lookUpHash and own History share url
+        let controller = PersistenceController.active
+        controller.persistentContainer.viewContext.performAndWait {
+            guard
+                let ownHistory = controller.getOwnHistory(),
+                let activeHistory = activeHistory,
+                let activeShare = controller.getShare(for: activeHistory),
+                let activeOwnerLookupInfoHash = activeShare.ownerLookupInfoHash,
+                let container = controller.persistentCloudKitContainer
+            else {
+                ALog(level: .warning, "Could not get active history owner lookup info hash")
+                return
+            }
+            controller.prepareHistoryShare { share in
+                guard let share = share,
+                    let lookupInfo = activeShare.owner.userIdentity.lookupInfo
+                else {
+                    ALog(level: .error, "Could not prepare history share")
+                    return
+                }
+                controller.fetchParticipants(for: [lookupInfo]) { result in
+                    switch result {
+                    case .success(let participants):
+                        if participants.count == 1 {
+                            let participant = participants[0]
+                            participant.permission = .readWrite
+                            ALog("Add participant \(participant) to history share")
+                            share.addParticipant(participant)
+                            container.persistUpdatedShare(share, in: controller.privatePersistentStore) { (share, error) in
+                                if let error = error {
+                                    ALog(level: .error, "Failed to persist updated share: \(error)")
+                                } else {
+                                    var reciprocation = Reciprocate(context: controller.persistentContainer.viewContext)
+                                    reciprocation.history = ownHistory
+                                    reciprocation.lookupInfoHash = activeOwnerLookupInfoHash
+                                    reciprocation.url = share?.url
+                                    controller.persistentContainer.viewContext.saveAndLogError()
+                                    ALog("Reciprocated to \(String(describing: activeHistory.ownerName))")
+                                }
+                            }
+                        }
+                        break
+                    case .failure(let error):
+                        ALog(level: .error, "\(error)")
+                    }
+                }
+            }
+        }
+    }
+    
     func doUpdateOwnHistory() {
         let request = PomodoroEntry.fetchRequest()
         request.predicate = NSPredicate(format:"(timerType == 'pomodoro') AND (startDate != nil)")
@@ -119,7 +209,18 @@ class HistoryViewModel: ObservableObject {
         }
     }
     
+    var updatePeopleCts: CancellationTokenSource? = nil
+    
+    private func newUpdatePeopleCt() -> CancellationToken {
+        if let cts = updatePeopleCts {
+            cts.cancel()
+        }
+        updatePeopleCts = CancellationTokenSource()
+        return updatePeopleCts!.token
+    }
+    
     func doUpdatePeople() {
+        let token = newUpdatePeopleCt()
         let request = PomodoroEntry.fetchRequest()
         request.predicate = NSPredicate(format:"(timerType == 'pomodoro') AND (startDate != nil)")
         request.sortDescriptors = [NSSortDescriptor(key: "startDate", ascending: false)]
@@ -137,8 +238,12 @@ class HistoryViewModel: ObservableObject {
             }
             ALog("Entry count: \(entries.count)")
             
-            fetchNames(Array(entriesByHistory.keys)) {
+            fetchNames(Array(entriesByHistory.keys), token: token) {
                 result in
+                if token.isCancellationRequested {
+                    ALog("Cancelled")
+                    return
+                }
                 switch result {
                 case .success(let nameByHistory):
                     self.updatePeople(entriesByHistory, nameByHistory)
@@ -146,13 +251,6 @@ class HistoryViewModel: ObservableObject {
                     ALog(level: .error, "Failed updating people: \(error)")
                 }
             }
-
-            /*
-            let count = try viewContext?.count(for: request)
-            people = [
-                Person(name: "", pomodoroCount: count ?? 0, isYou: true)
-            ]
-            */
         } catch {
             let nsError = error as NSError
             fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
@@ -163,7 +261,7 @@ class HistoryViewModel: ObservableObject {
         var people = [Person]()
         
         var histories = Array(entriesByHistory.keys)
-        let controller = PersistenceController.shared
+        let controller = PersistenceController.active
         var shareByHistory = [History: CKShare]()
         
         ALog("History count: \(histories.count)")
@@ -206,10 +304,26 @@ class HistoryViewModel: ObservableObject {
         }
         
         var removeRecentlyAcceptedShareInFavourOf: NSManagedObjectID? = nil
+        var ownHistory: History? = nil
+        var sharedToLookupInfos = [CKUserIdentity.LookupInfo]()
+        
+        for history in histories {
+            if isYou(history) {
+                ownHistory = history
+                if let share = controller.getShare(for: history) {
+                    for participant in share.participants {
+                        if let lookupInfo = participant.userIdentity.lookupInfo {
+                            sharedToLookupInfos.append(lookupInfo)
+                        }
+                    }
+                }
+                break
+            }
+        }
         
         for history in histories {
             let entries = entriesByHistory[history]
-            let isYou = isYou(history)
+            let isYou = history == ownHistory
             let name = isYou ? "" : nameByHistory[history]
             if let recentLookupInfo = recentlyAcceptedShare?.1,
                 let share = shareByHistory[history]
@@ -219,18 +333,31 @@ class HistoryViewModel: ObservableObject {
                     removeRecentlyAcceptedShareInFavourOf = history.objectID
                 }
             }
-            people.append(Person(historyId: history.objectID, name: name ?? "", pomodoroCount: entries?.count ?? 0, isYou: isYou))
+            var isReciprocating: Bool? = nil
+            if !isYou, let reciprocations = ownHistory?.reciprocations, let lookupInfoHash = shareByHistory[history]?.ownerLookupInfoHash {
+                for case let reciprocation as Reciprocate in reciprocations {
+                    if reciprocation.lookupInfoHash == lookupInfoHash {
+                        isReciprocating = reciprocation.url != nil
+                        break
+                    }
+                }
+            }
+            people.append(Person(historyId: history.objectID, name: name ?? "", pomodoroCount: entries?.count ?? 0, isYou: isYou, isReciprocating: isReciprocating))
         }
+        
         ALog("Updating \(people.count) people")
         DispatchQueue.main.async {
             self.setPeople(people, removeRecentlyAcceptedShareInFavourOf)
         }
     }
     
-    func fetchNames(_ histories: [History], completion: @escaping (Result<[History: String], Error>) -> Void) {
+    func fetchNames(_ histories: [History], token: CancellationToken, completion: @escaping (Result<[History: String], Error>) -> Void) {
         ALog("histories.count: \(histories.count)")    
         do {
-            let container = PersistenceController.shared.persistentCloudKitContainer
+            guard let container = PersistenceController.shared.persistentCloudKitContainer else {
+                completion(.success([History : String]()))
+                return
+            }
             let historyIDs = histories.map { $0.objectID }
             let sharesByID = try container.fetchShares(matching: historyIDs)
             
@@ -248,6 +375,10 @@ class HistoryViewModel: ObservableObject {
 
             PersistenceController.shared.fetchShareMetadata(for: urls) {
                 result in
+                if token.isCancellationRequested {
+                    ALog("Cancelled")
+                    return
+                }
                 switch result {
                 case .success(let cache):
                     var result = [History: String]()
@@ -270,7 +401,11 @@ class HistoryViewModel: ObservableObject {
                 }
             }
         } catch {
-            completion(.failure(error))
+            if !token.isCancellationRequested {
+                completion(.failure(error))
+            } else {
+                ALog("Cancelled")
+            }
         }
     }
     
@@ -298,17 +433,19 @@ struct Person: Identifiable, Hashable {
     let id: String
     let name: String
     let pomodoroCount: Int
+    let isReciprocating: Bool?
     let isYou: Bool
 
-    init (historyId: NSManagedObjectID, name: String, pomodoroCount: Int, isYou: Bool = false) {
-        self.init(id: historyId.uriRepresentation().absoluteString, name: name, pomodoroCount: pomodoroCount, isYou: isYou)
+    init (historyId: NSManagedObjectID, name: String, pomodoroCount: Int, isYou: Bool = false, isReciprocating: Bool? = nil) {
+        self.init(id: historyId.uriRepresentation().absoluteString, name: name, pomodoroCount: pomodoroCount, isYou: isYou, isReciprocating: isReciprocating)
     }
     
-    init (id: String, name: String, pomodoroCount: Int, isYou: Bool = false) {
+    init (id: String, name: String, pomodoroCount: Int, isYou: Bool = false, isReciprocating: Bool? = nil) {
         self.id = id
         self.name = name
         self.pomodoroCount = pomodoroCount
         self.isYou = isYou
+        self.isReciprocating = isReciprocating
     }
     
     func hash(into hasher: inout Hasher) {

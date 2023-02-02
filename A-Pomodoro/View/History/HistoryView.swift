@@ -59,12 +59,7 @@ struct ConfiguredHistoryView: View {
         if id == HistoryViewModel.recentlyAcceptShareId {
             return nil
         }
-        if let url = URL(string: id),
-            let objectId = PersistenceController.active.persistentContainer.persistentStoreCoordinator.managedObjectID(forURIRepresentation: url)
-        {
-            return try? viewContext.existingObject(with: objectId) as? History
-        }
-        return nil
+        return PersistenceController.active.getHistoryByObjectIdUrl(string: id)
     }
     
     var pomodoroEntryFetchRequest: FetchRequest<PomodoroEntry> {
@@ -152,6 +147,12 @@ struct FetchedHistoryView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
+                    
+                        ReciprocateView()
+                    
+                        Spacer()
+                        .frame(height: 12)
+                    
                         let maxCount = self.maxCount
                         ForEach(Array(groupedEntries.enumerated()), id: \.element) {
                             index, group in
@@ -161,7 +162,7 @@ struct FetchedHistoryView: View {
                                 if (index == 0 || (weekday - 1) == (Calendar.current.firstWeekday + 5) % 7) {
                                     Text(getDateString(date: group.id.date))
                                     .font(.system(size: 10))
-                                    .foregroundColor(Color(white: 0.33))
+                                    .foregroundColor(Color("SecondaryText"))
                                     .frame(alignment: .leading)
                                     .padding(.top, index > 0 ? 12 : 0)
                                     .padding(.bottom, 2)
@@ -176,10 +177,11 @@ struct FetchedHistoryView: View {
                                     
                                     Text("\(String(weekdayName.prefix(3)))")
                                     .font(.system(size: 10, weight: .regular))
-                                    .foregroundColor(Color(white: 0.33))
+                                    .foregroundColor(Color("SecondaryText"))
                                     if group.items.count > 0 {
                                         Text("\(group.items.count)")
                                         .font(.system(size: 10, weight: .semibold))
+                                        .foregroundColor(Color("PrimaryText"))
                                     }
                                 }
                                 
@@ -203,10 +205,9 @@ struct FetchedHistoryView: View {
                         }
                         
                     }
-                    .padding(.top, 12)
                 }
-                .background(.white)
-                .foregroundColor(.black)
+                .background(Color("Background"))
+                .foregroundColor(Color("TextColor"))
                 .frame(width: geometry.size.width, height: geometry.size.height - 72 - (showFooter ? 56 : 0))
                 .fixedSize(horizontal: true, vertical: true)
                 .offset(y: 72)

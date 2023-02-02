@@ -8,6 +8,7 @@
 import Foundation
 import CoreData
 import CloudKit
+import CryptoKit
 
 
 extension Notification.Name {
@@ -53,7 +54,7 @@ extension UICloudSharingController {
 extension PersistenceController {
 
     func presentCloudSharingController() {
-        persistentCloudKitContainer.viewContext.performAndWait {
+        persistentContainer.viewContext.performAndWait {
             if let history = getOwnHistory() {
                 presentCloudSharingController(history: history)
             }
@@ -63,8 +64,11 @@ extension PersistenceController {
         /**
          Grab the share if the history is already shared.
          */
+        guard let container = persistentCloudKitContainer else {
+            return
+        }
         var historyShare: CKShare?
-        if let shareSet = try? persistentCloudKitContainer.fetchShares(matching: [history.objectID]),
+        if let shareSet = try? container.fetchShares(matching: [history.objectID]),
            let (_, share) = shareSet.first {
             historyShare = share
         }
@@ -97,7 +101,10 @@ extension PersistenceController {
              or self-add themselves to it.
              The default value of publicPermission is CKShare.ParticipantPermission.none.
              */
-            self.persistentCloudKitContainer.share([unsharedHistory], to: nil) { objectIDs, share, container, error in
+            guard let container = self.persistentCloudKitContainer else {
+                return
+            }
+            container.share([unsharedHistory], to: nil) { objectIDs, share, container, error in
                 if let share = share {
                     self.configure(share: share)
                 }
@@ -145,8 +152,8 @@ extension PersistenceController: UICloudSharingControllerDelegate {
     }
 
     func cloudSharingControllerDidSaveShare(_ csc: UICloudSharingController) {
-        if let share = csc.share, let persistentStore = share.persistentStore {
-            persistentCloudKitContainer.persistUpdatedShare(share, in: persistentStore) { (share, error) in
+        if let share = csc.share, let persistentStore = share.persistentStore, let container = persistentCloudKitContainer {
+            container.persistUpdatedShare(share, in: persistentStore) { (share, error) in
                 if let error = error {
                     ALog(level: .error, "Failed to persist updated share: \(error)")
                 }
@@ -170,8 +177,32 @@ extension PersistenceController {
     
     func getShare(for object: NSManagedObject) -> CKShare? {
         let objectIDs = [object.objectID]
-        let result = try? persistentCloudKitContainer.fetchShares(matching: objectIDs)
+        let result = try? persistentCloudKitContainer?.fetchShares(matching: objectIDs)
         return result?.values.first
+    }
+    
+    func prepareHistoryShare(completion: @escaping (CKShare?) -> Void) {
+        guard let history = getOwnHistory() else {
+            completion(nil)
+            return
+        }
+        if let share = getShare(for: history) {
+            configure(share: share, with: history)
+            completion(share)
+            return
+        }
+        shareObject(history, to: nil) {
+            share, error in
+            if let share = share {
+                self.configure(share: share, with: history)
+                completion(share)
+                return
+            }
+            if let error = error {
+                ALog(level: .error, "Failed to share History: \(error)")
+                completion(nil)
+            }
+        }
     }
         
     func shareObject(_ unsharedObject: NSManagedObject, to existingShare: CKShare?,
@@ -183,7 +214,10 @@ extension PersistenceController {
     func shareObjects(_ unsharedObjects: [NSManagedObject], to existingShare: CKShare?,
                      completionHandler: ((_ share: CKShare?, _ error: Error?) -> Void)? = nil)
     {
-        persistentCloudKitContainer.share(unsharedObjects, to: existingShare) { (objectIDs, share, container, error) in
+        guard let cloudKitContainer = persistentCloudKitContainer else {
+            return
+        }
+        cloudKitContainer.share(unsharedObjects, to: existingShare) { (objectIDs, share, container, error) in
             guard error == nil, let share = share else {
                 ALog(level: .error, "Failed to share an object: \(error!))")
                 completionHandler?(share, error)
@@ -192,7 +226,7 @@ extension PersistenceController {
             /**
              Synchronize the changes on the share to the private persistent store.
              */
-            self.persistentCloudKitContainer.persistUpdatedShare(share, in: self.privatePersistentStore) { (share, error) in
+            cloudKitContainer.persistUpdatedShare(share, in: self.privatePersistentStore) { (share, error) in
                 if let error = error {
                     ALog(level: .error, "Failed to persist updated share: \(error)")
                 }
@@ -205,11 +239,11 @@ extension PersistenceController {
      Delete the Core Data objects and the records in the CloudKit record zone associated with the share.
      */
     func purgeObjectsAndRecords(with share: CKShare, in persistentStore: NSPersistentStore? = nil) {
-        guard let store = (persistentStore ?? share.persistentStore) else {
+        guard let store = (persistentStore ?? share.persistentStore), let container = persistentCloudKitContainer else {
             ALog(level: .error, "Failed to find the persistent store for share. \(share))")
             return
         }
-        persistentCloudKitContainer.purgeObjectsAndRecordsInZone(with: share.recordID.zoneID, in: store) { (zoneID, error) in
+        container.purgeObjectsAndRecordsInZone(with: share.recordID.zoneID, in: store) { (zoneID, error) in
             if let error = error {
                 ALog(level: .error, "Failed to purge objects and records: \(error)")
             }
@@ -235,14 +269,14 @@ extension PersistenceController {
 
     func share(with title: String) -> CKShare? {
         let stores = [privatePersistentStore, sharedPersistentStore]
-        let shares = try? persistentCloudKitContainer.fetchShares(in: stores)
+        let shares = try? persistentCloudKitContainer?.fetchShares(in: stores)
         let share = shares?.first(where: { $0.title == title })
         return share
     }
     
     func shareTitles() -> [String] {
         let stores = [privatePersistentStore, sharedPersistentStore]
-        let shares = try? persistentCloudKitContainer.fetchShares(in: stores)
+        let shares = try? persistentCloudKitContainer?.fetchShares(in: stores)
         return shares?.map { $0.title } ?? []
     }
     
@@ -273,20 +307,32 @@ extension CKShare {
     var persistentStore: NSPersistentStore? {
         let persistentContainer = PersistenceController.shared.persistentCloudKitContainer
         let privatePersistentStore = PersistenceController.shared.privatePersistentStore
-        if let shares = try? persistentContainer.fetchShares(in: privatePersistentStore) {
+        if let shares = try? persistentContainer?.fetchShares(in: privatePersistentStore) {
             let zoneIDs = shares.map { $0.recordID.zoneID }
             if zoneIDs.contains(recordID.zoneID) {
                 return privatePersistentStore
             }
         }
         let sharedPersistentStore = PersistenceController.shared.sharedPersistentStore
-        if let shares = try? persistentContainer.fetchShares(in: sharedPersistentStore) {
+        if let shares = try? persistentContainer?.fetchShares(in: sharedPersistentStore) {
             let zoneIDs = shares.map { $0.recordID.zoneID }
             if zoneIDs.contains(recordID.zoneID) {
                 return sharedPersistentStore
             }
         }
         return nil
+    }
+    
+    var ownerLookupInfoHash: String? {
+        guard let lookupInfo = self.owner.userIdentity.lookupInfo else {
+            return nil
+        }
+        guard let digest = lookupInfo.emailAddress ?? lookupInfo.phoneNumber else {
+            return nil
+        }
+        let digestData = Data(digest.utf8)
+        let hashed = SHA256.hash(data: digestData)
+        return hashed.compactMap { String(format: "%02x", $0) }.joined()
     }
 }
 

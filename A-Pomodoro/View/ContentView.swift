@@ -11,6 +11,7 @@ import CloudKit
 enum SheetType: String {
     case none
     case history
+    case secretSettings
 }
 
 enum OverlayType: String {
@@ -167,6 +168,7 @@ struct ContentView: View {
                 #if os(macOS)
                 HistoryView()
                 .frame(width: 400, height: 600)
+                .environment(\.colorScheme, overlayScheme)
                 #else
                 HistoryView()
                 .environment(\.shareHistory, {
@@ -180,6 +182,7 @@ struct ContentView: View {
                         self.overlay = .none
                     }
                 })
+                .environment(\.colorScheme, overlayScheme)
                 #endif
             default:
                 Text("No sheet")
