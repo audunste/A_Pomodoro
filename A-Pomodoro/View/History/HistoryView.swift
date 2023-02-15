@@ -11,23 +11,23 @@ import CloudKit
 
 struct HistoryView: View {
     @Environment(\.managedObjectContext) var viewContext
-    @EnvironmentObject var historyViewModel: HistoryViewModel
+    @EnvironmentObject var historyModel: HistoryModel
     
     var body: some View {
         VStack {
             ConfiguredHistoryView(config:
                 HistoryConfig(
-                    historyId: historyViewModel.activeId,
+                    historyId: historyModel.activeId,
                     fromDay: ADay.today - 179,
                     granularity: TimeInterval.day))
         }
         .onAppear {
-            if historyViewModel.viewContext == nil {
-                historyViewModel.viewContext = viewContext
+            if historyModel.viewContext == nil {
+                historyModel.viewContext = viewContext
             }
             updateActiveId()
         }
-        .onChange(of: historyViewModel.people) {
+        .onChange(of: historyModel.people) {
             people in
             ALog("onChange people")
             updateActiveId()
@@ -35,8 +35,8 @@ struct HistoryView: View {
     }
     
     func updateActiveId() {
-        if historyViewModel.activeId == nil && historyViewModel.people.count > 0 {
-            historyViewModel.activeId = historyViewModel.people[0].id
+        if historyModel.activeId == nil && historyModel.people.count > 0 {
+            historyModel.activeId = historyModel.people[0].id
         }
     }
 }
@@ -56,7 +56,7 @@ struct ConfiguredHistoryView: View {
         guard let id = config.historyId else {
             return nil
         }
-        if id == HistoryViewModel.recentlyAcceptShareId {
+        if id == HistoryModel.recentlyAcceptShareId {
             return nil
         }
         return PersistenceController.active.getHistoryByObjectIdUrl(string: id)
@@ -190,7 +190,7 @@ struct FetchedHistoryView: View {
                             .padding(.leading, 16)
                             .padding(.top, 4)
                         }
-                        if config.historyId == HistoryViewModel.recentlyAcceptShareId {
+                        if config.historyId == HistoryModel.recentlyAcceptShareId {
                             Text("Loading shared history via iCloud.\n\nThis can take anywhere from a few seconds to several minutes.")
                             .font(.system(size: 14))
                             .padding(.leading, 16)
@@ -246,12 +246,14 @@ struct HistoryFooter: View {
     }
 }
 
-class PreviewHistoryViewModel: HistoryViewModel {
+class PreviewHistoryModel: HistoryModel {
     
     let peopleCount: Int
+    let reciprocate: Bool
     
-    init(viewContext: NSManagedObjectContext, peopleCount: Int, share: Bool = false) {
-        self.peopleCount = peopleCount
+    init(viewContext: NSManagedObjectContext, peopleCount: Int, share: Bool = false, reciprocate: Bool = false) {
+        self.peopleCount = reciprocate ? max(2, peopleCount) : peopleCount
+        self.reciprocate = reciprocate
         super.init(viewContext: viewContext)
         if share {
             DispatchQueue.main.async {
@@ -277,6 +279,11 @@ class PreviewHistoryViewModel: HistoryViewModel {
         default:
             return
         }
+        DispatchQueue.main.async {
+            if self.reciprocate && self.people.count > 1 {
+                self.activeId = self.people[1].id
+            }
+        }
     }
     
     override func doUpdatePeople() {
@@ -286,7 +293,7 @@ class PreviewHistoryViewModel: HistoryViewModel {
 struct HistoryView_Previews: PreviewProvider {
 
     static let persistentContainer = PersistenceController.preview.persistentContainer
-    static let viewModel = HistoryViewModel(viewContext: persistentContainer.viewContext)
+    static let viewModel = HistoryModel(viewContext: persistentContainer.viewContext)
 
     static var previews: some View {
         HistoryView()
@@ -301,21 +308,21 @@ struct HistoryView_Previews: PreviewProvider {
         .previewDisplayName("Two people")
         .withPreviewEnvironment("iPhone 14")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 2) as HistoryViewModel)
+        .environmentObject(PreviewHistoryModel(viewContext: persistentContainer.viewContext, peopleCount: 2, reciprocate: true) as HistoryModel)
 
         HistoryView()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .previewDisplayName("Three people")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 3) as HistoryViewModel)
+        .environmentObject(PreviewHistoryModel(viewContext: persistentContainer.viewContext, peopleCount: 3) as HistoryModel)
 
         HistoryView()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .previewDisplayName("Accept share")
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .environment(\.managedObjectContext, persistentContainer.viewContext)
-        .environmentObject(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 3, share: true) as HistoryViewModel)
+        .environmentObject(PreviewHistoryModel(viewContext: persistentContainer.viewContext, peopleCount: 3, share: true) as HistoryModel)
 
         HistoryView()
         .previewDisplayName("SE landscape")

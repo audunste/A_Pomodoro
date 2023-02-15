@@ -20,20 +20,14 @@ private struct MainWindowSizeKey: EnvironmentKey {
     static let defaultValue: CGSize = .zero
 }
 
-/*
-struct ShareHistoryAction {
-    typealias Action = () -> ()
-    let action: Action
-    func callAsFunction() {
-        action()
-    }
-}
-*/
-
-typealias ShareHistoryAction = () -> Void
+typealias EnvAction = () -> Void
 
 private struct ShareHistoryActionKey: EnvironmentKey {
-    static var defaultValue: ShareHistoryAction? = nil
+    static var defaultValue: EnvAction? = nil
+}
+
+private struct UpActionKey: EnvironmentKey {
+    static var defaultValue: EnvAction? = nil
 }
 
 extension EnvironmentValues {
@@ -41,8 +35,12 @@ extension EnvironmentValues {
         get { self[MainWindowSizeKey.self] }
         set { self[MainWindowSizeKey.self] = newValue }
     }
-    var shareHistory: ShareHistoryAction? {
+    var shareHistory: EnvAction? {
         get { self[ShareHistoryActionKey.self] }
         set { self[ShareHistoryActionKey.self] = newValue }
+    }
+    var up: EnvAction? {
+        get { self[UpActionKey.self] }
+        set { self[UpActionKey.self] = newValue }
     }
 }

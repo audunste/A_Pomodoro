@@ -1,5 +1,5 @@
 //
-//  HistoryViewModel.swift
+//  HistoryModel.swift
 //  A-Pomodoro
 //
 //  Created by Audun Steinholm on 08/01/2023.
@@ -10,10 +10,11 @@ import Foundation
 import CoreData
 import CloudKit
 
-class HistoryViewModel: ObservableObject {
+class HistoryModel: ObservableObject {
     
     @Published public private(set) var people: [Person] = []
     @Published var activeId: String?
+    @Published var processingReciprocationForId: String? = nil
     
     var activePerson: Person? {
         guard let activeId = activeId else {
@@ -51,7 +52,7 @@ class HistoryViewModel: ObservableObject {
         /*
         NotificationCenter.default.post(name: .pomodoroStoreDidChange, object: self, userInfo: userInfo)
         */
-        ALog("New HistoryViewModel")
+        ALog("New HistoryModel")
         self.viewContext = viewContext
         NotificationCenter.default.publisher(for: .pomodoroStoreDidChange)
         .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: true)
@@ -98,37 +99,34 @@ class HistoryViewModel: ObservableObject {
         }
     }
     
-    func updatePeople() {
-        guard let viewContext = self.viewContext else {
+    func applyProcessingReciprocation() {
+        guard let processingId = activeId else {
             return
         }
-        if people.isEmpty {
-            viewContext.performAndWait {
-                self.doUpdateOwnHistory()
+        processingReciprocationForId = processingId
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
+            if self.processingReciprocationForId == processingId {
+                self.processingReciprocationForId = nil
             }
-        }
-        
-        viewContext.perform {
-            self.doUpdatePeople()
         }
     }
     
     func reciprocateNotNow() {
-        // Make Reciprocate object on own History with active lookUpHash and no share url
+        // Make Reciprocate object on active History with own lookUpHash and no share url
+        applyProcessingReciprocation()
         let controller = PersistenceController.active
-        controller.persistentContainer.viewContext.performAndWait {
+        controller.persistentContainer.viewContext.perform {
             guard
-                let ownHistory = controller.getOwnHistory(),
-                let activeHistory = activeHistory,
+                let activeHistory = self.activeHistory,
                 let activeShare = controller.getShare(for: activeHistory),
-                let activeOwnerLookupInfoHash = activeShare.ownerLookupInfoHash
+                let ownLookupInfoHash = activeShare.currentUserParticipant?.userIdentity.lookupInfo?.sha256Hash
             else {
-                ALog(level: .warning, "Could not get active history owner lookup info hash")
+                ALog(level: .warning, "Could not get active history, its share or own lookup info hash")
                 return
             }
-            var reciprocation = Reciprocate(context: controller.persistentContainer.viewContext)
-            reciprocation.history = ownHistory
-            reciprocation.lookupInfoHash = activeOwnerLookupInfoHash
+            let reciprocation = Reciprocate(context: controller.persistentContainer.viewContext)
+            reciprocation.history = activeHistory
+            reciprocation.lookupInfoHash = ownLookupInfoHash
             controller.persistentContainer.viewContext.saveAndLogError()
         }
     }
@@ -136,14 +134,14 @@ class HistoryViewModel: ObservableObject {
     func reciprocateShare() {
         // Make sure own History has a persisted share,
         // add the active share's owner as participant,
-        // then make Reciprocate object on own History with active lookUpHash and own History share url
+        // then make Reciprocate object on active History with own History share url
+        applyProcessingReciprocation()
         let controller = PersistenceController.active
         controller.persistentContainer.viewContext.performAndWait {
             guard
-                let ownHistory = controller.getOwnHistory(),
                 let activeHistory = activeHistory,
                 let activeShare = controller.getShare(for: activeHistory),
-                let activeOwnerLookupInfoHash = activeShare.ownerLookupInfoHash,
+                let ownLookupInfoHash = activeShare.currentUserParticipant?.userIdentity.lookupInfo?.sha256Hash,
                 let container = controller.persistentCloudKitContainer
             else {
                 ALog(level: .warning, "Could not get active history owner lookup info hash")
@@ -168,12 +166,12 @@ class HistoryViewModel: ObservableObject {
                                 if let error = error {
                                     ALog(level: .error, "Failed to persist updated share: \(error)")
                                 } else {
-                                    var reciprocation = Reciprocate(context: controller.persistentContainer.viewContext)
-                                    reciprocation.history = ownHistory
-                                    reciprocation.lookupInfoHash = activeOwnerLookupInfoHash
+                                    let reciprocation = Reciprocate(context: controller.persistentContainer.viewContext)
+                                    reciprocation.history = activeHistory
+                                    reciprocation.lookupInfoHash = ownLookupInfoHash
                                     reciprocation.url = share?.url
                                     controller.persistentContainer.viewContext.saveAndLogError()
-                                    ALog("Reciprocated to \(String(describing: activeHistory.ownerName))")
+                                    ALog("Reciprocated to \(String(describing: activeShare.owner.userIdentity.lookupInfo))")
                                 }
                             }
                         }
@@ -183,6 +181,31 @@ class HistoryViewModel: ObservableObject {
                     }
                 }
             }
+        }
+    }
+        
+    var updatePeopleCts: CancellationTokenSource? = nil
+    
+    func newUpdatePeopleCt() -> CancellationToken {
+        if let cts = updatePeopleCts {
+            cts.cancel()
+        }
+        updatePeopleCts = CancellationTokenSource()
+        return updatePeopleCts!.token
+    }
+    
+    func updatePeople() {
+        guard let viewContext = self.viewContext else {
+            return
+        }
+        if people.isEmpty {
+            viewContext.performAndWait {
+                self.doUpdateOwnHistory()
+            }
+        }
+        
+        viewContext.perform {
+            self.doUpdatePeople()
         }
     }
     
@@ -208,17 +231,7 @@ class HistoryViewModel: ObservableObject {
             setPeople([ Person(historyId: historyId, name: "", pomodoroCount: pomodoroCount, isYou: true)])
         }
     }
-    
-    var updatePeopleCts: CancellationTokenSource? = nil
-    
-    private func newUpdatePeopleCt() -> CancellationToken {
-        if let cts = updatePeopleCts {
-            cts.cancel()
-        }
-        updatePeopleCts = CancellationTokenSource()
-        return updatePeopleCts!.token
-    }
-    
+
     func doUpdatePeople() {
         let token = newUpdatePeopleCt()
         let request = PomodoroEntry.fetchRequest()
@@ -334,7 +347,11 @@ class HistoryViewModel: ObservableObject {
                 }
             }
             var isReciprocating: Bool? = nil
-            if !isYou, let reciprocations = ownHistory?.reciprocations, let lookupInfoHash = shareByHistory[history]?.ownerLookupInfoHash {
+            if !isYou,
+                let reciprocations = history.reciprocations,
+                let share = shareByHistory[history],
+                let lookupInfoHash = share.currentUserParticipant?.userIdentity.lookupInfo?.sha256Hash
+            {
                 for case let reciprocation as Reciprocate in reciprocations {
                     if reciprocation.lookupInfoHash == lookupInfoHash {
                         isReciprocating = reciprocation.url != nil
@@ -350,9 +367,9 @@ class HistoryViewModel: ObservableObject {
             self.setPeople(people, removeRecentlyAcceptedShareInFavourOf)
         }
     }
-    
+
     func fetchNames(_ histories: [History], token: CancellationToken, completion: @escaping (Result<[History: String], Error>) -> Void) {
-        ALog("histories.count: \(histories.count)")    
+        ALog("histories.count: \(histories.count)")
         do {
             guard let container = PersistenceController.shared.persistentCloudKitContainer else {
                 completion(.success([History : String]()))

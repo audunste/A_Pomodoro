@@ -10,6 +10,13 @@ import CoreData
 
 extension Category {
 
+    var isMine: Bool {
+        guard let history = self.history else {
+            return true
+        }
+        return history.isMine
+    }
+
     func getTaskLike(_ dup: Task) -> Task? {
         guard let tasks = self.tasks else {
             return nil

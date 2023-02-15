@@ -108,7 +108,8 @@ extension PersistenceController {
     {
         let categoryRequest = Category.fetchRequest()
         categoryRequest.predicate = NSPredicate(format: "title == nil")
-        let categories = try categoryRequest.execute()
+        let unfilteredCategories = try categoryRequest.execute()
+        let categories = unfilteredCategories.filter { $0.isMine }
         if categories.count > 0 {
             if categories.count > 1 {
                 ALog(level: .warning, "incorrect default category count: \(categories.count)")
@@ -131,7 +132,8 @@ extension PersistenceController {
         } else {
             let historyRequest = History.fetchRequest()
             // TODO handle situation when other people's history is also relevant
-            let histories = try historyRequest.execute()
+            let unfilteredHistories = try historyRequest.execute()
+            let histories = unfilteredHistories.filter { $0.isMine }
             if histories.count > 0 {
                 if histories.count > 1 {
                     ALog(level: .warning, "incorrect history entry count: \(histories.count)")

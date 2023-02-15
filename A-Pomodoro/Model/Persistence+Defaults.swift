@@ -15,9 +15,10 @@ extension PersistenceController {
     func makeSureDefaultsExist() {
         performAndWait { taskContext in
             do {
+                
                 let request = Task.fetchRequest()
                 let count = try taskContext.count(for: request)
-                if count > 0 {
+                if count > 0 && getOwnHistory() != nil {
                     let tasks = try request.execute()
                     for task in tasks {
                         if task.category == nil {
@@ -47,6 +48,39 @@ extension PersistenceController {
                 return
             }
             
+        }
+    }
+    
+    func testShareOfHistory() {
+        performAndWait { taskContext in
+            do {
+                guard let cloudKitContainer = persistentContainer as? NSPersistentCloudKitContainer else {
+                    return
+                }
+                let history2 = History(context: taskContext)
+                taskContext.saveAndLogError()
+                
+                prepareShare(for: history2) {
+                    share in
+                    guard let share = share else {
+                        taskContext.delete(history2)
+                        taskContext.saveAndLogError()
+                        return
+                    }
+                    cloudKitContainer.persistUpdatedShare(share, in: self.privatePersistentStore) { (share, error) in
+                        if let error = error {
+                            ALog(level: .error, "Failed to persist updated share: \(error)")
+                        } else {
+                            ALog("Share success")
+                        }
+                        taskContext.delete(history2)
+                        taskContext.saveAndLogError()
+                        return
+                    }
+                }
+            } catch {
+                fatalError("#\(#function): error: \(error)")
+            }
         }
     }
     
@@ -96,6 +130,7 @@ extension PersistenceController {
         let histories = allHistories.filter { $0.isMine }
         if histories.count > 1 {
             // Find oldest shared or just oldest history
+            ALog("Found two own histories. Will merge.")
             var best: History? = nil
             var bestHasShare = false
             var bestCreationDate: Date? = nil
@@ -236,6 +271,28 @@ extension PersistenceController {
             } catch {
                 ALog(level: .error, "\(#function) failed to get entity counts: \(error)")
             }
+        }
+    }
+    
+    func deleteReciprocateObjects() {
+        performAndWait { taskContext in
+            let request = History.fetchRequest()
+            guard let histories = try? request.execute()
+            else {
+                ALog(level: .warning, "Could not get History objects")
+                return
+            }
+            for history in histories {
+                guard let reciprocations = history.reciprocations,
+                    let share = self.getShare(for: history),
+                    let lookupInfoHash = share.currentUserParticipant?.userIdentity.lookupInfo?.sha256Hash
+                else { continue }
+                let removeArray = reciprocations.filter { ($0 as! Reciprocate).lookupInfoHash == lookupInfoHash }
+                for toRemove in removeArray {
+                    taskContext.delete(toRemove as! Reciprocate)
+                }
+            }
+            taskContext.saveAndLogError()
         }
     }
     
@@ -458,6 +515,7 @@ extension PersistenceController {
     func fetchShareMetadata(for shareURLs: [URL],
         completion: @escaping (Result<[URL: CKShare.Metadata], Error>) -> Void)
     {
+        // TODO(audun) This one can take 3 minutes to complete for no apparent reason sometimes, so should try to get by without it
         ALog("shareURLs.count: \(shareURLs.count)")
         var cache = [URL: CKShare.Metadata]()
             
@@ -474,6 +532,7 @@ extension PersistenceController {
         // fetch errors and handles any errors in the completion
         // closure instead.
         operation.perShareMetadataResultBlock = { url, result in
+            ALog("perShareMetadataResultBlock \(result)")
             switch result {
             case .success(let metadata):
                 cache[url] = metadata
@@ -485,6 +544,7 @@ extension PersistenceController {
         // If the operation fails, return the error to the caller.
         // Otherwise, return the array of participants.
         operation.fetchShareMetadataResultBlock = { result in
+            ALog("fetchShareMetadataResultBlock \(result)")
             switch result {
             case .success(_):
                 completion(.success(cache))
@@ -497,5 +557,36 @@ extension PersistenceController {
         // container's queue to execute it.
         operation.qualityOfService = .background
         CKContainer.default().add(operation)
+    }
+    
+    func logShareParticipants() {
+        performAndWait { taskContext in
+            guard let history = getOwnHistory() else {
+                return
+            }
+            ALog("reciprocations.count: \(history.reciprocations?.count ?? 0)")
+            ALog("categories.count: \(history.categories?.count ?? 0)")
+            if let share = getShare(for: history) {
+                for participant in share.participants {
+                    ALog("participant: \(participant)")
+                }
+            }            
+        }
+    }
+    
+    func unshareOwnHistory() {
+        performAndWait { taskContext in
+            guard let history = getOwnHistory() else {
+                return
+            }
+            if let _ = getShare(for: history) {
+                ALog("Found share will clone and delete")
+                
+                _ = history.clone(into: taskContext)
+                taskContext.delete(history)
+                
+                taskContext.saveAndLogError()
+            }
+        }
     }
 }

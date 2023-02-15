@@ -11,7 +11,7 @@ import CloudKit
 enum SheetType: String {
     case none
     case history
-    case secretSettings
+    case settings
 }
 
 enum OverlayType: String {
@@ -97,7 +97,6 @@ struct ContentView: View {
                     .fixedSize(horizontal: false, vertical: false)
                     #endif
                 }
-                .background(modelData.appColor.backgroundColor)
                 .onChange(of: selection) { newSelection in
                     updateAppColors(newSelection)
                 }
@@ -126,9 +125,19 @@ struct ContentView: View {
                     stage in
                     updateSelection(stage: stage)
                 }
+                
+                
             }
-            HStack {
+            HStack(spacing: 0) {
                 Spacer()
+                Button {
+                    sheet = .settings
+                } label: {
+                    Image(systemName: "gearshape.fill")
+                    .frame(width: 24, height: 24)
+                }
+                .buttonStyle(IconButton())
+                Spacer().frame(width: 16)
                 Button {
                     sheet = .history
                 } label: {
@@ -136,11 +145,11 @@ struct ContentView: View {
                     .frame(width: 24, height: 24)
                 }
                 .buttonStyle(IconButton())
-                Spacer()
-                .frame(width: 16)
+                Spacer().frame(width: 16)
             }
             .frame(height: 56)
         }
+        .background(modelData.appColor.backgroundColor)
         .blur(radius: overlay == .none ? 0 : 4)
         .overlay {
             switch overlay {
@@ -182,6 +191,15 @@ struct ContentView: View {
                         self.overlay = .none
                     }
                 })
+                .environment(\.colorScheme, overlayScheme)
+                #endif
+            case .settings:
+                #if os(macOS)
+                SettingsView()
+                .frame(width: 400, height: 600)
+                .environment(\.colorScheme, overlayScheme)
+                #else
+                SettingsView()
                 .environment(\.colorScheme, overlayScheme)
                 #endif
             default:

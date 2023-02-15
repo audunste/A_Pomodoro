@@ -15,6 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?)
     -> Bool
     {
+        #if !InitializeCloudKitSchema
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
         { success, error in
             if let error = error {
@@ -23,11 +24,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
         }
         UNUserNotificationCenter.current().delegate = self
         UICloudSharingController.swizzle()
-        #if !InitializeCloudKitSchema
+        
         DispatchQueue.global(qos: .userInitiated).async {
             let controller = PersistenceController.shared
             //controller.startOver()
             controller.makeSureDefaultsExist()
+            //controller.testShareOfHistory()
             //controller.resetReciprocation()
             //controller.reciprocateShares()
             controller.fixHistoryShare()
@@ -57,6 +59,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
     
 }
 
+#if !InitializeCloudKitSchema
 extension AppDelegate: UNUserNotificationCenterDelegate {
 
     func userNotificationCenter(_ center: UNUserNotificationCenter,
@@ -68,6 +71,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     }
 
 }
+#endif
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -77,6 +81,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func windowScene(_ windowScene: UIWindowScene,
         userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata)
     {
+        #if !InitializeCloudKitSchema
         ALog("share incoming: \(String(describing: cloudKitShareMetadata))")
         let persistenceController = PersistenceController.shared
         let sharedStore = persistenceController.sharedPersistentStore
@@ -92,12 +97,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 if let li = cloudKitShareMetadata.ownerIdentity.lookupInfo {
                     userInfo["lookupInfo"] = li
                 }
-                if let name = HistoryViewModel.nameFrom(metadata: cloudKitShareMetadata) {
+                if let name = HistoryModel.nameFrom(metadata: cloudKitShareMetadata) {
                     userInfo["name"] = name
                 }
                 NotificationCenter.default.post(name: .shareAccepted, object: nil, userInfo: userInfo)
             }
         }
+        #endif
     }
 }
 

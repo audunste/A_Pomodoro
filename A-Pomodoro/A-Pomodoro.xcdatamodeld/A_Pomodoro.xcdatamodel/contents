@@ -11,7 +11,7 @@
         <attribute name="allowReactions" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="ownerName" optional="YES" attributeType="String"/>
         <relationship name="categories" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Category" inverseName="history" inverseEntity="Category"/>
-        <relationship name="reciprocations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Reciprocate" inverseName="history" inverseEntity="Reciprocate"/>
+        <relationship name="reciprocations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Reciprocate" inverseName="history" inverseEntity="Reciprocate"/>
     </entity>
     <entity name="PomodoroEntry" representedClassName="PomodoroEntry" syncable="YES" codeGenerationType="class">
         <attribute name="adjustmentSeconds" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>

@@ -53,6 +53,19 @@ extension UICloudSharingController {
 
 extension PersistenceController {
 
+    func getOwnUserIdentity(completion: @escaping (CKUserIdentity?) -> Void) {
+        let container = CKContainer.default()
+        container.fetchUserRecordID { recordId, error in
+            if let recordId = recordId {
+                container.discoverUserIdentity(withUserRecordID: recordId) { userIdentity, error in
+                    completion(userIdentity)
+                }
+            } else {
+                completion(nil)
+            }
+        }
+    }
+
     func presentCloudSharingController() {
         persistentContainer.viewContext.performAndWait {
             if let history = getOwnHistory() {
@@ -186,6 +199,13 @@ extension PersistenceController {
             completion(nil)
             return
         }
+        prepareShare(for: history) {
+            share in
+            completion(share)
+        }
+    }
+    
+    func prepareShare(for history: History, completion: @escaping (CKShare?) -> Void) {
         if let share = getShare(for: history) {
             configure(share: share, with: history)
             completion(share)
@@ -327,7 +347,13 @@ extension CKShare {
         guard let lookupInfo = self.owner.userIdentity.lookupInfo else {
             return nil
         }
-        guard let digest = lookupInfo.emailAddress ?? lookupInfo.phoneNumber else {
+        return lookupInfo.sha256Hash
+    }
+}
+
+extension CKUserIdentity.LookupInfo {
+    var sha256Hash: String? {
+        guard let digest = self.emailAddress ?? self.phoneNumber else {
             return nil
         }
         let digestData = Data(digest.utf8)

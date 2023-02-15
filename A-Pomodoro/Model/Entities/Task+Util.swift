@@ -10,6 +10,13 @@ import CoreData
 
 extension Task {
 
+    var isMine: Bool {
+        guard let history = self.category?.history else {
+            return true
+        }
+        return history.isMine
+    }
+
     func getPomodoroLike(_ dup: PomodoroEntry) -> PomodoroEntry? {
         guard let pomodoroEntries = self.pomodoroEntries else {
             return nil

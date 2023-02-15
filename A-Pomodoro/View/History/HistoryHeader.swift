@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct HistoryHeader: View {
-    @EnvironmentObject private var viewModel: HistoryViewModel
+    @EnvironmentObject private var viewModel: HistoryModel
     @EnvironmentObject private var modelData: ModelData
 
     static func calcItemWidth(_ width: CGFloat, _ peopleCount: Int) -> CGFloat {
@@ -69,7 +69,7 @@ struct HeaderItem: View {
     let isSelected: Bool
     
     @Environment(\.shareHistory) var shareHistory
-    @EnvironmentObject var historyViewModel: HistoryViewModel
+    @EnvironmentObject var historyModel: HistoryModel
 
     let largeFontSize: CGFloat = 14
     let smallFontSize: CGFloat = 12
@@ -77,21 +77,21 @@ struct HeaderItem: View {
     var body: some View {
         Button {
             ALog("tap HeaderItem")
-            historyViewModel.activeId = person.id
+            historyModel.activeId = person.id
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(person.isYou
                         ? NSLocalizedString("Your history", comment: "History header")
                         : person.name)
-                    .font(.system(size: largeFontSize, weight: .semibold))
+                    .font(.smallTitle)
                     .padding(.top, 8)
                     .padding(.leading, 16)
                     
-                    Text(person.id == HistoryViewModel.recentlyAcceptShareId
+                    Text(person.id == HistoryModel.recentlyAcceptShareId
                         ? NSLocalizedString("Loading...", comment: "Status on recently accepted share while data is being loaded")
                         : String(format: NSLocalizedString("%d pomodoro(s)", comment: "Number of pomodoros finished"), person.pomodoroCount))
-                    .font(.system(size: smallFontSize, weight: .regular))
+                    .font(.smallBody)
                     .frame(alignment: .topLeading)
                     .padding(.top, 8)
                     .padding(.leading, 16)
@@ -126,6 +126,6 @@ struct HistoryHeader_Previews: PreviewProvider {
         .withPreviewEnvironment("iPhone SE (3rd generation)")
         .frame(width: 375, height: 72)
         .border(.gray)
-        .environmentObject(PreviewHistoryViewModel(viewContext: persistentContainer.viewContext, peopleCount: 3) as HistoryViewModel)
+        .environmentObject(PreviewHistoryModel(viewContext: persistentContainer.viewContext, peopleCount: 3) as HistoryModel)
     }
 }
