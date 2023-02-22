@@ -224,6 +224,10 @@ struct TimerView: View {
         guard let lastPomodoroEntry = relevantLastPomodoroEntryOrNil else {
             return
         }
+        if !lastPomodoroEntry.isRunning && lastPomodoroEntry.getRemaining() <= 0 {
+            remaining = seconds
+            return
+        }
         let newRemaining = lastPomodoroEntry.getRemaining()
         //ALog("updateRemaining \(timerType) \(lastPomodoroEntry.timerType ?? "nil")")
         if (abs(newRemaining - Double(remaining - 1)) < 0.5) {
