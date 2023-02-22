@@ -10,6 +10,10 @@ import Foundation
 import CoreData
 import CloudKit
 
+#if os(iOS)
+import UIKit
+#endif
+
 class HistoryModel: ObservableObject {
     
     @Published public private(set) var people: [Person] = []
@@ -60,6 +64,7 @@ class HistoryModel: ObservableObject {
             notification in
             ALog("Change in history view model")
             self.updatePeople()
+            self.maybeTriggerAcceptReciprocateLink()
         }
         .store(in: &cancelSet)
         NotificationCenter.default.addObserver(forName: .shareAccepted, object: nil, queue: .main) { n in
@@ -179,6 +184,30 @@ class HistoryModel: ObservableObject {
                     case .failure(let error):
                         ALog(level: .error, "\(error)")
                     }
+                }
+            }
+        }
+    }
+    
+    func maybeTriggerAcceptReciprocateLink() {
+        let controller = PersistenceController.active
+        let context = controller.persistentContainer.viewContext
+        context.performAndWait {
+            let history = controller.getOwnHistory()
+            guard let reciprocations = history?.reciprocations else {
+                return
+            }
+            for case let reciprocate as Reciprocate in reciprocations {
+                if let url = reciprocate.url {
+                    #if os(iOS)
+                    ALog("Found reciprocate link")
+                    DispatchQueue.main.async {
+                        UIApplication.shared.open(url)
+                    }
+                    reciprocate.url = nil
+                    context.saveAndLogError()
+                    #endif
+                    break
                 }
             }
         }
@@ -352,10 +381,16 @@ class HistoryModel: ObservableObject {
                 let share = shareByHistory[history],
                 let lookupInfoHash = share.currentUserParticipant?.userIdentity.lookupInfo?.sha256Hash
             {
-                for case let reciprocation as Reciprocate in reciprocations {
-                    if reciprocation.lookupInfoHash == lookupInfoHash {
-                        isReciprocating = reciprocation.url != nil
-                        break
+                if let ownerLookupInfo = share.owner.userIdentity.lookupInfo,
+                    sharedToLookupInfos.contains(ownerLookupInfo) {
+                    ALog("Already shared to potential reciprocate user")
+                    isReciprocating = true
+                } else {
+                    for case let reciprocation as Reciprocate in reciprocations {
+                        if reciprocation.lookupInfoHash == lookupInfoHash {
+                            isReciprocating = reciprocation.url != nil
+                            break
+                        }
                     }
                 }
             }

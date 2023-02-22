@@ -53,19 +53,6 @@ extension UICloudSharingController {
 
 extension PersistenceController {
 
-    func getOwnUserIdentity(completion: @escaping (CKUserIdentity?) -> Void) {
-        let container = CKContainer.default()
-        container.fetchUserRecordID { recordId, error in
-            if let recordId = recordId {
-                container.discoverUserIdentity(withUserRecordID: recordId) { userIdentity, error in
-                    completion(userIdentity)
-                }
-            } else {
-                completion(nil)
-            }
-        }
-    }
-
     func presentCloudSharingController() {
         persistentContainer.viewContext.performAndWait {
             if let history = getOwnHistory() {

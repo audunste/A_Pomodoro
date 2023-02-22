@@ -555,7 +555,7 @@ extension PersistenceController {
             
         // Set an appropriate QoS and add the operation to the
         // container's queue to execute it.
-        operation.qualityOfService = .background
+        operation.qualityOfService = .userInitiated
         CKContainer.default().add(operation)
     }
     
