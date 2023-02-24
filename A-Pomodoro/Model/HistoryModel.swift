@@ -253,6 +253,15 @@ class HistoryModel: ObservableObject {
                     }
                 }
             }
+            if historyId == nil {
+                let histories = try History.fetchRequest().execute()
+                for history in histories {
+                    if history.isMine {
+                        historyId = history.objectID
+                        break
+                    }
+                }
+            }
         } catch {
             ALog("Error: \(error)")
         }
@@ -279,6 +288,12 @@ class HistoryModel: ObservableObject {
                 entriesByHistory[history] = list
             }
             ALog("Entry count: \(entries.count)")
+            let histories = try History.fetchRequest().execute()
+            for history in histories {
+                if entriesByHistory[history] == nil {
+                    entriesByHistory[history] = []
+                }
+            }
             
             fetchNames(Array(entriesByHistory.keys), token: token) {
                 result in

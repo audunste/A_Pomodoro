@@ -41,6 +41,30 @@ extension PersistenceController {
         }
     }
     
+    func adoptOrphanedPomodoros() {
+        performAndWait { taskContext in
+            do {
+                let request = PomodoroEntry.fetchRequest()
+                request.predicate = NSPredicate(format: "task == nil")
+                let count = try taskContext.count(for: request)
+                if count > 0 {
+                    ALog("Adopting \(count) orphaned PomodoroEntry objects")
+                    let pomodoros = try request.execute()
+                    guard let activeTask = getOrAssignActiveTask(context: taskContext) else {
+                        ALog("No active task to adopt orphans")
+                        return
+                    }
+                    for pomodoro in pomodoros {
+                        pomodoro.task = activeTask
+                    }
+                    taskContext.saveAndLogError()
+                }
+            } catch {
+                fatalError("#\(#function): error: \(error)")
+            }
+        }
+    }
+    
     func fixHistoryShare() {
         performAndWait { context in
             guard let history = getOwnHistory(), let share = getShare(for: history) else {
@@ -113,10 +137,63 @@ extension PersistenceController {
         }
     }
     
+    func mergeDefaultsAfterLaunch() {
+        performAndWait { taskContext in
+            do {
+                try mergeDefaultTasks(taskContext)
+                taskContext.saveAndLogError()
+            } catch {
+                ALog(level: .error, "\(#function) failed to merge defaults: \(error)")
+            }
+        }
+    }
+    
     func mergeIfDefault(objectID: NSManagedObjectID, context: NSManagedObjectContext) throws {
         let object = context.object(with: objectID)
         if object is History {
             try mergeHistories(context)
+        }
+    }
+    
+    func mergeDefaultTasks(_ context: NSManagedObjectContext) throws {
+        let request = Task.fetchRequest()
+        let allTasks = try request.execute()
+        let tasks = allTasks.filter { $0.isMine && $0.title == nil }
+        if tasks.count > 0 {
+            // go up the hierarchy and make sure all tasks are hooked up to a history
+            for task in tasks {
+                guard let category = task.category else {
+                    ALog("Fixing task.category")
+                    task.category = try getOrCreateDefaultCategory(context)
+                    continue
+                }
+                if category.history == nil {
+                    ALog("Fixing category.history")
+                    category.history = try getOrCreateOwnHistory(context)
+                }
+            }
+            if tasks.count > 1 {
+                // merge tasks
+                let bestTask = tasks[0]
+                for task in tasks {
+                    if task == bestTask {
+                        continue
+                    }
+                    guard let entries = task.pomodoroEntries else {
+                        ALog(level: .warning, "no pomodoro entries to merge into best task")
+                        continue
+                    }
+                    for case let entry as PomodoroEntry in entries {
+                        if bestTask.getPomodoroLike(entry) != nil {
+                            // task already has a similar enough entry, can skip
+                            ALog(level: .info, "merge found duplicate pomodoro entry")
+                            continue
+                        }
+                        bestTask.addToPomodoroEntries(entry.clone(into: context))
+                    }
+                    context.delete(task)
+                }
+            }
         }
     }
     

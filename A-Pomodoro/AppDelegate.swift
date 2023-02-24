@@ -33,6 +33,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
             //controller.resetReciprocation()
             //controller.reciprocateShares()
             controller.fixHistoryShare()
+            controller.adoptOrphanedPomodoros()
+            controller.mergeDefaultsAfterLaunch()
             Thread.sleep(forTimeInterval: 5.0)
             controller.printEntityCounts()
             Thread.sleep(forTimeInterval: 5.0)

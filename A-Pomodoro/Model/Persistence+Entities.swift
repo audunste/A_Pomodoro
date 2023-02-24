@@ -29,6 +29,33 @@ extension PersistenceController {
         }
         return nil
     }
+    
+    func getOrAssignActiveTask(context: NSManagedObjectContext) -> Task? {
+        if let task = self.getActiveTask(context: context) {
+            return task
+        }
+        let request = Task.fetchRequest()
+        request.predicate = NSPredicate(format: "title == nil")
+        do {
+            let unfilteredEntries = try request.execute()
+            let entries = unfilteredEntries.filter { $0.isMine }
+            switch entries.count {
+            case 0:
+                ALog(level: .warning, "No default task available")
+                return nil
+            case 1:
+                self.activeTaskId = entries[0].objectID
+                return entries[0]
+            default:
+                ALog(level: .warning, "Multiple default tasks available, using task \(entries[0])")
+                self.activeTaskId = entries[0].objectID
+                return entries[0]
+            }
+        } catch {
+            ALog(level: .error, "Failed to get tasks: \(error)")
+        }
+        return nil
+    }
 
     func addPomodoroEntry(
         timeSeconds: Double,
@@ -48,30 +75,11 @@ extension PersistenceController {
                 entry.pauseDate = startDate
                 entry.adjustmentSeconds = Double(adjustedBy)
             }
-            if let task = self.getActiveTask(context: context) {
+            if let task = self.getOrAssignActiveTask(context: context) {
                 entry.task = task
                 ALog("Creating new PomodoroEntry with task \(task)")
             } else {
-                ALog(level: .warning, "No active task to add new PomodoroEntry to")
-                let request = Task.fetchRequest()
-                request.predicate = NSPredicate(format: "title == nil")
-                do {
-                    let entries = try request.execute()
-                    switch entries.count {
-                    case 0:
-                        ALog(level: .warning, "No default task available when creating new PomorodoEntry")
-                    case 1:
-                        ALog("Creating new PomodoroEntry with task \(entries[0])")
-                        self.activeTaskId = entries[0].objectID
-                        entry.task = entries[0]
-                    default:
-                        ALog(level: .warning, "Multiple default tasks available when creating new PomodoroEntry, using task \(entries[0])")
-                        self.activeTaskId = entries[0].objectID
-                        entry.task = entries[0]
-                    }
-                } catch {
-                    ALog(level: .error, "Failed to save Core Data context for PomodoroEntry: \(error)")
-                }
+                ALog(level: .warning, "No default task available when creating new PomorodoEntry")
             }
             
             do {
@@ -130,20 +138,21 @@ extension PersistenceController {
         } else if self.getActiveTask(context: context)?.category?.history != nil {
             category.history = self.getActiveTask(context: context)?.category?.history
         } else {
-            let historyRequest = History.fetchRequest()
-            // TODO handle situation when other people's history is also relevant
-            let unfilteredHistories = try historyRequest.execute()
-            let histories = unfilteredHistories.filter { $0.isMine }
-            if histories.count > 0 {
-                if histories.count > 1 {
-                    ALog(level: .warning, "incorrect history entry count: \(histories.count)")
-                }
-                category.history = histories[0]
-            } else {
-                category.history = try doAddHistory(context: context)
-            }
         }
         return category
+    }
+    
+    func getOrCreateOwnHistory(_ context: NSManagedObjectContext) throws -> History {
+        let historyRequest = History.fetchRequest()
+        let unfilteredHistories = try historyRequest.execute()
+        let histories = unfilteredHistories.filter { $0.isMine }
+        if histories.count > 0 {
+            if histories.count > 1 {
+                ALog(level: .warning, "incorrect history entry count: \(histories.count)")
+            }
+            return histories[0]
+        }
+        return try doAddHistory(context: context)
     }
     
     func doAddHistory(
