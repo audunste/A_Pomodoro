@@ -57,6 +57,9 @@
 		547F632F2961516C008A83A5 /* MiscUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632E2961516C008A83A5 /* MiscUtil.swift */; };
 		547F63312964DEEA008A83A5 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F63302964DEEA008A83A5 /* HistoryView.swift */; };
 		547F6335296820AF008A83A5 /* TimeUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F6334296820AF008A83A5 /* TimeUtil.swift */; };
+		549B928429B155AF0021E28A /* UserDefaults+AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549B928329B155AF0021E28A /* UserDefaults+AppGroup.swift */; };
+		549B928529B155B00021E28A /* UserDefaults+AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549B928329B155AF0021E28A /* UserDefaults+AppGroup.swift */; };
+		549B928629B1D9020021E28A /* MiscUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632E2961516C008A83A5 /* MiscUtil.swift */; };
 		54A6998A29AEBF15007898C8 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54A6998929AEBF15007898C8 /* WidgetKit.framework */; };
 		54A6998C29AEBF15007898C8 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54A6998B29AEBF15007898C8 /* SwiftUI.framework */; };
 		54A6998F29AEBF16007898C8 /* RemainingWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A6998E29AEBF16007898C8 /* RemainingWidgetBundle.swift */; };
@@ -160,6 +163,8 @@
 		547F632E2961516C008A83A5 /* MiscUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiscUtil.swift; sourceTree = "<group>"; };
 		547F63302964DEEA008A83A5 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		547F6334296820AF008A83A5 /* TimeUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtil.swift; sourceTree = "<group>"; };
+		549B928329B155AF0021E28A /* UserDefaults+AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaults+AppGroup.swift"; sourceTree = "<group>"; };
+		549B928729B1EA280021E28A /* RemainingWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RemainingWidgetExtension.entitlements; sourceTree = "<group>"; };
 		54A6998729AEBF15007898C8 /* RemainingWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RemainingWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		54A6998929AEBF15007898C8 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		54A6998B29AEBF15007898C8 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -241,6 +246,8 @@
 		5467542F2953343800EA7F5E = {
 			isa = PBXGroup;
 			children = (
+				549B928729B1EA280021E28A /* RemainingWidgetExtension.entitlements */,
+				549B928229B155860021E28A /* AppGroup */,
 				542AFD102961050B004B53F9 /* Resources */,
 				5467543A2953343800EA7F5E /* A-Pomodoro */,
 				546754512953343A00EA7F5E /* A-PomodoroTests */,
@@ -374,6 +381,14 @@
 				5467FDFE299CFE1000B3E51D /* SheetBottomBar.swift */,
 			);
 			path = Misc;
+			sourceTree = "<group>";
+		};
+		549B928229B155860021E28A /* AppGroup */ = {
+			isa = PBXGroup;
+			children = (
+				549B928329B155AF0021E28A /* UserDefaults+AppGroup.swift */,
+			);
+			path = AppGroup;
 			sourceTree = "<group>";
 		};
 		54A6998829AEBF15007898C8 /* Frameworks */ = {
@@ -653,6 +668,7 @@
 				54AE15952974CF5700BBFDA2 /* History+Util.swift in Sources */,
 				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
 				54AE1583296AD4CE00BBFDA2 /* HistoryModel.swift in Sources */,
+				549B928429B155AF0021E28A /* UserDefaults+AppGroup.swift in Sources */,
 				547A8DF2299B874A0076AD8C /* Font+App.swift in Sources */,
 				54AE15992974D36100BBFDA2 /* Task+Util.swift in Sources */,
 				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
@@ -704,6 +720,8 @@
 			files = (
 				54A6998F29AEBF16007898C8 /* RemainingWidgetBundle.swift in Sources */,
 				54A6999129AEBF16007898C8 /* RemainingWidgetLiveActivity.swift in Sources */,
+				549B928529B155B00021E28A /* UserDefaults+AppGroup.swift in Sources */,
+				549B928629B1D9020021E28A /* MiscUtil.swift in Sources */,
 				54A6999329AEBF16007898C8 /* RemainingWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1128,6 +1146,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = RemainingWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6E4XG53E27;
@@ -1157,6 +1176,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = RemainingWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6E4XG53E27;

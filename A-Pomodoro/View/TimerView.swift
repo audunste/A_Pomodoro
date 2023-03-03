@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import WidgetKit
 
 struct TimerView: View {
 
@@ -42,7 +43,7 @@ struct TimerView: View {
     private var pauseDate: Date? {
         lastPomodoroEntryBinder.managedObject?.pauseDate
     }
-    
+        
     var displayedRemaining: Int32 {
         tempRemaining ?? remaining
     }
@@ -76,7 +77,7 @@ struct TimerView: View {
             let stage = max(0, stage)
             if (getExpectedStage() != stage) {
                 remaining = seconds
-                stopTimerAndCancelNotificationIfNeeded(delayedCancel: true)
+                stopTimerAndCancelNotificationIfNeeded(isActiveTimer: false)
             } else {
                 ALog("maybe start \(timerType)")
             }
@@ -123,7 +124,7 @@ struct TimerView: View {
                 }
             } else {
                 stopTimerAndCancelNotificationIfNeeded()
-                updateRemaining()
+                _ = updateRemaining()
             }
         }
         .onAppear() {
@@ -131,7 +132,7 @@ struct TimerView: View {
                 return
             }
             ALog("relevant pomodoro isRunning=\(lastPomodoroEntry.isRunning)")
-            updateRemaining()
+            _ = updateRemaining()
             if lastPomodoroEntry.isRunning {
                 scheduleTimerAndNotificationIfNeeded()
             }
@@ -166,7 +167,7 @@ struct TimerView: View {
                 viewContext.saveAndLogError()
                 Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
                     t in
-                    updateRemaining()
+                    _ = updateRemaining()
                 }
             } else {
                 PersistenceController.active.addPomodoroEntry(
@@ -220,13 +221,13 @@ struct TimerView: View {
         }
     }
 
-    func updateRemaining() {
+    func updateRemaining() -> Bool {
         guard let lastPomodoroEntry = relevantLastPomodoroEntryOrNil else {
-            return
+            return false
         }
         if !lastPomodoroEntry.isRunning && lastPomodoroEntry.getRemaining() <= 0 {
             remaining = seconds
-            return
+            return true
         }
         let newRemaining = lastPomodoroEntry.getRemaining()
         //ALog("updateRemaining \(timerType) \(lastPomodoroEntry.timerType ?? "nil")")
@@ -235,6 +236,7 @@ struct TimerView: View {
         } else {
             remaining = max(0, Int32(Int(newRemaining)))
         }
+        return false
     }
     
     func changeStageIfNeeded() {
@@ -252,8 +254,8 @@ struct TimerView: View {
         ALog("timer starting")
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true)
         { t in
-            updateRemaining()
-            if (remaining <= 0) {
+            let nextStage = updateRemaining()
+            if (nextStage || remaining <= 0) {
                 goToNextStage()
                 Timer.scheduledTimer(withTimeInterval: 1, repeats: false) {
                     t in
@@ -265,6 +267,20 @@ struct TimerView: View {
         }
         
         scheduleNotificationIfNeeded()
+        #if os(iOS)
+        let userDefaults = UserDefaults.group
+        let components = DateComponents(second: Int(remaining))
+        let futureDate = Calendar.current.date(byAdding: components, to: Date())!
+        userDefaults.set(futureDate, forKey: AppGroupKey.Timer.endDate)
+        switch (timerType) {
+        case .pomodoro:
+            userDefaults.set(true, forKey: AppGroupKey.Timer.isFocusType)
+        case .shortBreak, .longBreak:
+            userDefaults.set(false, forKey: AppGroupKey.Timer.isFocusType)
+        }
+        userDefaults.set(Int(seconds), forKey: AppGroupKey.Timer.seconds)
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.remaining)
+        #endif
     }
     
     func scheduleNotificationIfNeeded() {
@@ -292,7 +308,7 @@ struct TimerView: View {
     
     }
     
-    func stopTimerAndCancelNotificationIfNeeded(delayedCancel: Bool = false) {
+    func stopTimerAndCancelNotificationIfNeeded(isActiveTimer: Bool = true) {
         if (timer == nil) {
             return
         }
@@ -301,7 +317,19 @@ struct TimerView: View {
         timer = nil
 
         #if os(iOS)
-        if delayedCancel {
+        if isActiveTimer {
+            let userDefaults = UserDefaults.group
+            userDefaults.removeObject(forKey: AppGroupKey.Timer.endDate)
+            switch (timerType) {
+            case .pomodoro:
+                userDefaults.set(true, forKey: AppGroupKey.Timer.isFocusType)
+            case .shortBreak, .longBreak:
+                userDefaults.set(false, forKey: AppGroupKey.Timer.isFocusType)
+            }
+        }
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.remaining)
+        
+        if !isActiveTimer {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [timerType.rawValue])
                 

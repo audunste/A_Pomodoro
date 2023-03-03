@@ -19,6 +19,12 @@ public extension Double {
     }
 }
 
+extension Comparable {
+    func clamped(to limits: ClosedRange<Self>) -> Self {
+        return min(max(self, limits.lowerBound), limits.upperBound)
+    }
+}
+
 class IdentifiableGroup<I, T>: Identifiable, Hashable where I: Hashable {
     
     let id: I

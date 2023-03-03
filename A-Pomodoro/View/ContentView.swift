@@ -103,8 +103,9 @@ struct ContentView: View {
                 .onAppear() {
                     ALog("man obj: \(lastPomodoroEntryBinder.managedObjectDebugString)")
                     if let entry = lastPomodoroEntryBinder.managedObject {
-                        ALog("setting focusAndBreakStage to \(entry.stage)")
-                        focusAndBreakStage = Int(entry.stage)
+                        let newStage = Int(entry.stage) + (entry.getRemaining() <= 0 ? 1 : 0)
+                        ALog("setting focusAndBreakStage to \(newStage)")
+                        focusAndBreakStage = newStage
                         updateSelection(stage: focusAndBreakStage)
                     }
                     updateAppColors(selection)
