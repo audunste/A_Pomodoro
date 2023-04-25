@@ -109,7 +109,7 @@ class HistoryModel: ObservableObject {
             return
         }
         processingReciprocationForId = processingId
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
             if self.processingReciprocationForId == processingId {
                 self.processingReciprocationForId = nil
             }

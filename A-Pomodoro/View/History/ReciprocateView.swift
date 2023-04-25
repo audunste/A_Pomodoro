@@ -76,7 +76,6 @@ struct ReciprocateView: View {
                     .padding(.leading, 12)
                 }
                 .padding(EdgeInsets(top: 0, leading: 18, bottom: 4, trailing: 18))
-                Image("PomodoroWidget")
             }
             .frame(maxWidth: .infinity)
             .background(Color("BannerBackground"))
