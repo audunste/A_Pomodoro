@@ -41,6 +41,61 @@ extension PersistenceController {
         }
     }
     
+    func fixDefaultTask() {
+        performAndWait { taskContext in
+            do {
+                let request = Task.fetchRequest()
+                let allTasks = try request.execute()
+                for task in allTasks {
+                    ALog("task: \(task) \(task.isMine)")
+                }
+            } catch {
+                fatalError("#\(#function): error: \(error)")
+            }
+        }
+    }
+    
+    func logObjectTree() {
+        performAndWait { taskContext in
+            do {
+                let request = History.fetchRequest()
+                let histories = try request.execute()
+                for history in histories {
+                    ALog("\(history.isMine ? "M" : "S") \(history)")
+                    if let share = PersistenceController.shared.getShare(for: history) {
+                        ALog("  \(share.owner)")
+                    }
+                    guard let container = PersistenceController.shared.persistentCloudKitContainer else {
+                        continue
+                    }
+                    let sharesByID = try container.fetchShares(matching: [history.objectID])
+                    if sharesByID.count > 0 {
+                        ALog("  \(sharesByID[history.objectID]!)")
+                    }
+                    
+                    guard let categories = history.categories else {
+                        continue
+                    }
+                    for case let category as Category in categories {
+                        ALog("\(category.isMine ? "M" : "S")   \(category)")
+                        guard let tasks = category.tasks else {
+                            continue
+                        }
+                        for case let task as Task in tasks {
+                            ALog("\(task.isMine ? "M" : "S")     \(task)")
+                            guard let pomodoros = task.pomodoroEntries else {
+                                continue
+                            }
+                            ALog("      entryCount: \(pomodoros.count)")
+                        }
+                    }
+                }
+            } catch {
+                fatalError("#\(#function): error: \(error)")
+            }
+        }
+    }
+    
     func adoptOrphanedPomodoros() {
         performAndWait { taskContext in
             do {

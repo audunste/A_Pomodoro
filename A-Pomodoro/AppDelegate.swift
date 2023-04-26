@@ -28,7 +28,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             let controller = PersistenceController.shared
             //controller.startOver()
+            Thread.sleep(forTimeInterval: 5.0)
             controller.makeSureDefaultsExist()
+            controller.logObjectTree()
             //controller.testShareOfHistory()
             //controller.resetReciprocation()
             //controller.reciprocateShares()
