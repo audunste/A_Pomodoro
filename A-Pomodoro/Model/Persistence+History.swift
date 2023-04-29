@@ -125,7 +125,6 @@ extension PersistenceController {
         #if !InitializeCloudKitSchema
         if !possibleDuplicates.isEmpty {
             //mergeDefaultsLater()
-            mergeDefaultsAndWait(possibleDuplicates: possibleDuplicates)
         }
         #endif
     }
