@@ -66,7 +66,7 @@
 		54A6999129AEBF16007898C8 /* RemainingWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A6999029AEBF16007898C8 /* RemainingWidgetLiveActivity.swift */; };
 		54A6999329AEBF16007898C8 /* RemainingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A6999229AEBF16007898C8 /* RemainingWidget.swift */; };
 		54A6999529AEBF17007898C8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54A6999429AEBF17007898C8 /* Assets.xcassets */; };
-		54A6999929AEBF17007898C8 /* RemainingWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 54A6998729AEBF15007898C8 /* RemainingWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		54A6999929AEBF17007898C8 /* RemainingWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 54A6998729AEBF15007898C8 /* RemainingWidgetExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		54AE1583296AD4CE00BBFDA2 /* HistoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1582296AD4CE00BBFDA2 /* HistoryModel.swift */; };
 		54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AE1584296B631A00BBFDA2 /* HistoryHeader.swift */; };
 		54AE1588296B813F00BBFDA2 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 54AE158A296B813F00BBFDA2 /* Localizable.stringsdict */; };
@@ -741,6 +741,7 @@
 		};
 		54A6999829AEBF17007898C8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilter = ios;
 			target = 54A6998629AEBF15007898C8 /* RemainingWidgetExtension */;
 			targetProxy = 54A6999729AEBF17007898C8 /* PBXContainerItemProxy */;
 		};
