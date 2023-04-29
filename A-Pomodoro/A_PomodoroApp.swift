@@ -19,7 +19,7 @@ struct A_PomodoroApp: App {
     #if !InitializeCloudKitSchema
     @StateObject private var lastPomodoroEntryBinder = LatestObjectBinder<PomodoroEntry>(
         container: PersistenceController.shared.persistentContainer,
-        sortKey: "startDate") { $0.isMine }
+        sortKey: "startDate", delayedInit: true) { $0.isMine }
     @StateObject private var historyModel = HistoryModel()
     #endif
 

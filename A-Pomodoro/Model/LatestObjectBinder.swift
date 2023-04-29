@@ -20,7 +20,12 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
     
     @Published var managedObject: T? = nil
 
-    init(container: NSPersistentContainer, sortKey: String, predicate: NSPredicate? = nil, postFilter: ((T) -> Bool)? = nil) {
+    init(container: NSPersistentContainer,
+        sortKey: String,
+        predicate: NSPredicate? = nil,
+        delayedInit: Bool = false,
+        postFilter: ((T) -> Bool)? = nil)
+    {
         let context = container.viewContext
         let entityName = "\(T.self)"
         self.fetchRequest = NSFetchRequest<T>(entityName: entityName)
@@ -36,6 +41,25 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
             cacheName: nil)
         super.init()
         controller.delegate = self
+        if delayedInit {
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { t in
+                self.postinitWrapper(container)
+            }
+        } else {
+            postinitWrapper(container)
+        }
+    }
+    
+    
+    
+    var managedObjectDebugString: String {
+        guard let object = managedObject as? NSManagedObject else {
+            return "nil"
+        }
+        return object.debugString(with: controller.managedObjectContext)
+    }
+    
+    private func postinitWrapper(_ container: NSPersistentContainer) {
         if Thread.isMainThread {
             postinit(container)
         } else {
@@ -43,13 +67,6 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
                 self.postinit(container)
             }
         }
-    }
-    
-    var managedObjectDebugString: String {
-        guard let object = managedObject as? NSManagedObject else {
-            return "nil"
-        }
-        return object.debugString(with: controller.managedObjectContext)
     }
     
     private func postinit(_ container: NSPersistentContainer) {
