@@ -30,7 +30,7 @@ extension PersistenceController {
         return nil
     }
     
-    func getOrAssignActiveTask(context: NSManagedObjectContext) -> Task? {
+    func getAssignOrCreateActiveTask(context: NSManagedObjectContext) -> Task? {
         if let task = self.getActiveTask(context: context) {
             return task
         }
@@ -41,8 +41,8 @@ extension PersistenceController {
             let entries = unfilteredEntries.filter { $0.isMine }
             switch entries.count {
             case 0:
-                ALog(level: .warning, "No default task available")
-                return nil
+                ALog(level: .info, "No default task available. Creating it.")
+                return try doAddTask(context: context)
             case 1:
                 self.activeTaskId = entries[0].objectID
                 return entries[0]
@@ -75,7 +75,7 @@ extension PersistenceController {
                 entry.pauseDate = startDate
                 entry.adjustmentSeconds = Double(adjustedBy)
             }
-            if let task = self.getOrAssignActiveTask(context: context) {
+            if let task = self.getAssignOrCreateActiveTask(context: context) {
                 entry.task = task
                 ALog("Creating new PomodoroEntry with task \(task)")
             } else {
@@ -104,7 +104,7 @@ extension PersistenceController {
         let task = Task(context: context)
         if let category = category {
             task.category = category
-        } else if self.getActiveTask(context: context)?.category != nil{
+        } else if self.getActiveTask(context: context)?.category != nil {
             task.category = self.getActiveTask(context: context)?.category
         } else {
             task.category = try self.getOrCreateDefaultCategory(context)
@@ -138,6 +138,7 @@ extension PersistenceController {
         } else if self.getActiveTask(context: context)?.category?.history != nil {
             category.history = self.getActiveTask(context: context)?.category?.history
         } else {
+            category.history = try self.getOrCreateOwnHistory(context)
         }
         return category
     }

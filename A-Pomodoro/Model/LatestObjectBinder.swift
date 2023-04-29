@@ -60,15 +60,7 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
             let error = error as NSError
             fatalError("Unresolved error \(error), \(error.userInfo)")
         }
-        if !maybeUpdateManagedObject() {
-            container.viewContext.automaticallyMergesChangesFromParent = true
-            container.performBackgroundTask { (bContext) in
-                bContext.automaticallyMergesChangesFromParent = true
-                self.maybeCreateDefaults(
-                    context: bContext,
-                    request: self.fetchRequest)
-            }
-        }
+        _ = maybeUpdateManagedObject()
     }
     
     func deleteAllAndSave() {
@@ -84,7 +76,6 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
                     fromRemoteContextSave: [NSDeletedObjectsKey: objectIDs],
                     into: [context]
                 )
-                maybeCreateDefaults(context: context, request: self.fetchRequest)
             }
         } catch {
             let error = error as NSError
@@ -112,29 +103,4 @@ class LatestObjectBinder<T>: NSObject, NSFetchedResultsControllerDelegate, Obser
         return false
     }
     
-    private func maybeCreateDefaults(
-        context: NSManagedObjectContext,
-        request: NSFetchRequest<T>)
-    {
-        let entityName = "\(T.self)"
-        ALog("maybeCreateDefaults " + entityName)
-        do {
-            let objects = try context.fetch(request)
-            let count: Int = objects.count
-            let str = String(count)
-            ALog(entityName + " object count: " + str)
-            if !objects.isEmpty {
-                return
-            }
-            ALog("creating default " + entityName)
-            // create new object
-            _ = NSEntityDescription.insertNewObject(
-                forEntityName: entityName,
-                into: context) as! T
-            try context.save()
-        } catch {
-            let error = error as NSError
-            fatalError("Unresolved error \(error), \(error.userInfo)")
-        }
-    }
 }

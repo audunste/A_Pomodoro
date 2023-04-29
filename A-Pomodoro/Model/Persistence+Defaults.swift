@@ -12,6 +12,7 @@ import CloudKit
 
 extension PersistenceController {
 
+    /*
     func makeSureDefaultsExist() {
         performAndWait { taskContext in
             do {
@@ -40,6 +41,7 @@ extension PersistenceController {
             }
         }
     }
+    */
     
     func fixDefaultTask() {
         performAndWait { taskContext in
@@ -105,7 +107,7 @@ extension PersistenceController {
                 if count > 0 {
                     ALog("Adopting \(count) orphaned PomodoroEntry objects")
                     let pomodoros = try request.execute()
-                    guard let activeTask = getOrAssignActiveTask(context: taskContext) else {
+                    guard let activeTask = getAssignOrCreateActiveTask(context: taskContext) else {
                         ALog("No active task to adopt orphans")
                         return
                     }
@@ -721,4 +723,29 @@ extension PersistenceController {
             }
         }
     }
+    
+    func deleteAllOwnObjects() {
+        performAndWait { taskContext in
+            guard let history = getOwnHistory() else {
+                return
+            }
+            taskContext.delete(history)
+            taskContext.saveAndLogError()
+        }
+        performAndWaitFatalError { taskContext in
+            let allCategories = try Category.fetchRequest().execute()
+            let myCategories = allCategories.filter { $0.isMine }
+            for category in myCategories {
+                taskContext.delete(category)
+            }
+            for task in try Task.fetchRequest().execute().filter({ $0.isMine }) {
+                taskContext.delete(task)
+            }
+            for entry in try PomodoroEntry.fetchRequest().execute().filter({ $0.isMine }) {
+                taskContext.delete(entry)
+            }
+            taskContext.saveAndLogError()
+        }
+    }
+    
 }

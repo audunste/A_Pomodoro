@@ -230,6 +230,18 @@ struct SecretSettingsBody: View {
                 }
                 .buttonStyle(.borderless)
                 
+                Button {
+                    PersistenceController.active.deleteAllOwnObjects()
+                } label: {
+                    HStack {
+                        Text("Delete all own objects")
+                        .font(.regularBody)
+                        .padding(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+                        Spacer()
+                    }
+                }
+                .buttonStyle(.borderless)
+                
                 Spacer()
             }
         }

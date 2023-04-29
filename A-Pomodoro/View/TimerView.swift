@@ -154,11 +154,9 @@ struct TimerView: View {
     }
     
     func togglePlay() {
-        guard let lastPomodoroEntry = lastPomodoroEntry else {
-            return
-        }
         if timer == nil {
-            if lastPomodoroEntry.isPaused
+            if let lastPomodoroEntry = lastPomodoroEntry,
+                lastPomodoroEntry.isPaused
                 && lastPomodoroEntry.timerType == timerType.rawValue
             {
                 let duration = -lastPomodoroEntry.pauseDate!.timeIntervalSinceNow
@@ -180,6 +178,9 @@ struct TimerView: View {
             scheduleTimerAndNotificationIfNeeded()
             changeStageIfNeeded()
         } else {
+            guard let lastPomodoroEntry = lastPomodoroEntry else {
+                return
+            }
             lastPomodoroEntry.pauseDate = Date()
             viewContext.saveAndLogError()
             stopTimerAndCancelNotificationIfNeeded()

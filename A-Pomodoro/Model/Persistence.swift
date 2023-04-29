@@ -34,8 +34,11 @@ class PersistenceController: NSObject, ObservableObject {
     var inMemory: Bool = false
 
     func getActiveTask(context: NSManagedObjectContext) -> Task? {
-        if let activeTaskId = activeTaskId {
-            return context.object(with: activeTaskId) as? Task
+        if let activeTaskId = activeTaskId,
+            let activeTask = context.object(with: activeTaskId) as? Task,
+            activeTask.isMine
+        {
+            return activeTask
         }
         return nil
     }

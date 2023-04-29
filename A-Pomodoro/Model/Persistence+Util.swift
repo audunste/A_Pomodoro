@@ -17,5 +17,17 @@ extension PersistenceController {
             block(taskContext)
         }
     }
+    
+    func performAndWaitFatalError(_ block: (NSManagedObjectContext) throws -> Void) {
+        let taskContext = persistentContainer.newTaskContext()
+        taskContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        taskContext.performAndWait {
+            do {
+                try block(taskContext)
+            } catch {
+                fatalError("#\(#function): error: \(error)")
+            }
+        }
+    }
 
 }
