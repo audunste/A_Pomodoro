@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		540D2D0529FE5E4E00771B2F /* ContentSheetRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540D2D0429FE5E4E00771B2F /* ContentSheetRouter.swift */; };
+		540D2D0729FFAA3800771B2F /* TaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540D2D0629FFAA3800771B2F /* TaskView.swift */; };
 		542AFD04295A4F7C004B53F9 /* SquareZStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD03295A4F7C004B53F9 /* SquareZStack.swift */; };
 		542AFD06295A8F59004B53F9 /* ProgressBow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD05295A8F59004B53F9 /* ProgressBow.swift */; };
 		542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 542AFD07295BAC6F004B53F9 /* ProgressText.swift */; };
@@ -60,6 +62,8 @@
 		549B928429B155AF0021E28A /* UserDefaults+AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549B928329B155AF0021E28A /* UserDefaults+AppGroup.swift */; };
 		549B928529B155B00021E28A /* UserDefaults+AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549B928329B155AF0021E28A /* UserDefaults+AppGroup.swift */; };
 		549B928629B1D9020021E28A /* MiscUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547F632E2961516C008A83A5 /* MiscUtil.swift */; };
+		549E3C9C2A1114C7009B50E7 /* SizeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549E3C9B2A1114C7009B50E7 /* SizeConstants.swift */; };
+		549E3C9D2A1114C7009B50E7 /* SizeConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549E3C9B2A1114C7009B50E7 /* SizeConstants.swift */; };
 		54A6998A29AEBF15007898C8 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54A6998929AEBF15007898C8 /* WidgetKit.framework */; };
 		54A6998C29AEBF15007898C8 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 54A6998B29AEBF15007898C8 /* SwiftUI.framework */; };
 		54A6998F29AEBF16007898C8 /* RemainingWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A6998E29AEBF16007898C8 /* RemainingWidgetBundle.swift */; };
@@ -119,6 +123,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		540D2D0429FE5E4E00771B2F /* ContentSheetRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentSheetRouter.swift; sourceTree = "<group>"; };
+		540D2D0629FFAA3800771B2F /* TaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskView.swift; sourceTree = "<group>"; };
 		542AFD03295A4F7C004B53F9 /* SquareZStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquareZStack.swift; sourceTree = "<group>"; };
 		542AFD05295A8F59004B53F9 /* ProgressBow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBow.swift; sourceTree = "<group>"; };
 		542AFD07295BAC6F004B53F9 /* ProgressText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressText.swift; sourceTree = "<group>"; };
@@ -165,6 +171,7 @@
 		547F6334296820AF008A83A5 /* TimeUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeUtil.swift; sourceTree = "<group>"; };
 		549B928329B155AF0021E28A /* UserDefaults+AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaults+AppGroup.swift"; sourceTree = "<group>"; };
 		549B928729B1EA280021E28A /* RemainingWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RemainingWidgetExtension.entitlements; sourceTree = "<group>"; };
+		549E3C9B2A1114C7009B50E7 /* SizeConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SizeConstants.swift; sourceTree = "<group>"; };
 		54A6998729AEBF15007898C8 /* RemainingWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RemainingWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		54A6998929AEBF15007898C8 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		54A6998B29AEBF15007898C8 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -324,6 +331,8 @@
 				547A8DED299B6A9C0076AD8C /* SettingsView */,
 				547A8DE8299804B60076AD8C /* History */,
 				5467546F295334FB00EA7F5E /* ContentView.swift */,
+				540D2D0429FE5E4E00771B2F /* ContentSheetRouter.swift */,
+				540D2D0629FFAA3800771B2F /* TaskView.swift */,
 				5467546E295334FB00EA7F5E /* TimerView.swift */,
 				542AFD03295A4F7C004B53F9 /* SquareZStack.swift */,
 				542AFD05295A8F59004B53F9 /* ProgressBow.swift */,
@@ -379,6 +388,7 @@
 			children = (
 				547A8DF1299B874A0076AD8C /* Font+App.swift */,
 				5467FDFE299CFE1000B3E51D /* SheetBottomBar.swift */,
+				549E3C9B2A1114C7009B50E7 /* SizeConstants.swift */,
 			);
 			path = Misc;
 			sourceTree = "<group>";
@@ -669,10 +679,12 @@
 				5460DF7B2957032300D00E0E /* PomodoroEntry+Util.swift in Sources */,
 				54AE1583296AD4CE00BBFDA2 /* HistoryModel.swift in Sources */,
 				549B928429B155AF0021E28A /* UserDefaults+AppGroup.swift in Sources */,
+				540D2D0729FFAA3800771B2F /* TaskView.swift in Sources */,
 				547A8DF2299B874A0076AD8C /* Font+App.swift in Sources */,
 				54AE15992974D36100BBFDA2 /* Task+Util.swift in Sources */,
 				542AFD08295BAC6F004B53F9 /* ProgressText.swift in Sources */,
 				546754772953350700EA7F5E /* ModelData.swift in Sources */,
+				549E3C9C2A1114C7009B50E7 /* SizeConstants.swift in Sources */,
 				547A8DEA299804E70076AD8C /* ReciprocateView.swift in Sources */,
 				547F632B296148F3008A83A5 /* Sparkle.swift in Sources */,
 				54675471295334FB00EA7F5E /* ContentView.swift in Sources */,
@@ -685,6 +697,7 @@
 				546754752953350700EA7F5E /* AppColor.swift in Sources */,
 				542AFD0A295C87EA004B53F9 /* ButtonStyles.swift in Sources */,
 				54AE1585296B631A00BBFDA2 /* HistoryHeader.swift in Sources */,
+				540D2D0529FE5E4E00771B2F /* ContentSheetRouter.swift in Sources */,
 				54AE15A3297C435100BBFDA2 /* Persistence+Util.swift in Sources */,
 				5460DF7929566E3B00D00E0E /* LatestObjectBinder.swift in Sources */,
 				54AE15972974D2AF00BBFDA2 /* Category+Util.swift in Sources */,
@@ -711,6 +724,7 @@
 			files = (
 				5467545D2953343A00EA7F5E /* A_PomodoroUITests.swift in Sources */,
 				5467545F2953343A00EA7F5E /* A_PomodoroUITestsLaunchTests.swift in Sources */,
+				549E3C9D2A1114C7009B50E7 /* SizeConstants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

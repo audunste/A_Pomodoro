@@ -25,6 +25,13 @@ extension GeometryProxy {
     }
 }
 
+struct VerticalMobileView: View {
+
+    var body: some View {
+        Spacer()
+    }
+}
+
 struct ContentView: View {
 
     @EnvironmentObject var modelData: ModelData
@@ -173,39 +180,19 @@ struct ContentView: View {
             }
         }
         .sheet(isPresented: isSheetPresented) {
-            switch sheet {
-            case .history:
-                #if os(macOS)
-                HistoryView()
-                .frame(width: 400, height: 600)
-                .environment(\.colorScheme, overlayScheme)
-                #else
-                HistoryView()
-                .environment(\.shareHistory, {
-                    ALog("share history")
-                    sheet = .none
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        PersistenceController.shared.presentCloudSharingController()
-                    }
-                    overlay = .preparingShare
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                        self.overlay = .none
-                    }
-                })
-                .environment(\.colorScheme, overlayScheme)
-                #endif
-            case .settings:
-                #if os(macOS)
-                SettingsView()
-                .frame(width: 400, height: 600)
-                .environment(\.colorScheme, overlayScheme)
-                #else
-                SettingsView()
-                .environment(\.colorScheme, overlayScheme)
-                #endif
-            default:
-                Text("No sheet")
-            }
+            ContentSheetRouter(sheet: sheet)
+            .environment(\.colorScheme, overlayScheme)
+            .environment(\.shareHistory, {
+                ALog("share history")
+                sheet = .none
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    PersistenceController.shared.presentCloudSharingController()
+                }
+                overlay = .preparingShare
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                    self.overlay = .none
+                }
+            })
         }
     }
     
