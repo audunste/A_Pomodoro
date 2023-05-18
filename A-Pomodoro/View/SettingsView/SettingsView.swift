@@ -139,6 +139,8 @@ struct SettingsHeader: View {
             Text("Settings")
             .font(.regularTitle)
             .padding(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+            .fixedSize(horizontal: true, vertical: true)
+            
             Button {
                 ssCount2 += 1
                 if ssCount2 > 2 {

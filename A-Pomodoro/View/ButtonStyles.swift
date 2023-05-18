@@ -35,6 +35,17 @@ struct IconButton: ButtonStyle {
     }
 }
 
+struct IconButton2: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(6)
+            .background(Color(white: 1.0, opacity: 0.00001))
+            .clipShape(Circle())
+            .opacity(configuration.isPressed ? 0.5 : 1)
+    }
+}
+
+
 struct ProminentButton: ButtonStyle {
     @EnvironmentObject var modelData: ModelData
 

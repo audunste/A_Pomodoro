@@ -71,7 +71,7 @@ struct TimerView: View {
                 }
             }, actionHandler: self.togglePlay)
         }
-        .frame(maxWidth: 430, maxHeight: 430)
+        .frame(maxWidth: Size.maxTimerWidth, maxHeight: Size.maxTimerWidth)
         .onChange(of: focusAndBreakStage) {
             stage in
             let stage = max(0, stage)

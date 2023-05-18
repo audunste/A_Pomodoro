@@ -8,6 +8,12 @@
 import Foundation
 import SwiftUI
 
+enum SheetType: String {
+    case none
+    case history
+    case settings
+    case task
+}
 
 struct ContentSheetRouter: View {
 
@@ -28,6 +34,13 @@ struct ContentSheetRouter: View {
             .frame(width: 400, height: 600)
             #else
             SettingsView()
+            #endif
+        case .task:
+            #if os(macOS)
+            TaskSheet()
+            .frame(width: 400, height: 600)
+            #else
+            TaskSheet()
             #endif
         default:
             Text("No sheet")

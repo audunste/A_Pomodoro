@@ -1,5 +1,11 @@
 /* No comment provided by engineer. */
+"Categories" = "Kategorier";
+
+/* No comment provided by engineer. */
 "Close" = "Lukk";
+
+/* Name of default category */
+"Default Category" = "Standardkategori";
 
 /* No comment provided by engineer. */
 "Empty people array" = "Laster...";
@@ -28,6 +34,9 @@
 /* No comment provided by engineer. */
 "Preparing share..." = "Forbereder deling...";
 
+/* No comment provided by engineer. */
+"Settings" = "Innstillinger";
+
 /* Action */
 "Share" = "Del";
 
@@ -39,6 +48,9 @@
 
 /* Start button */
 "Start" = "Start";
+
+/* No comment provided by engineer. */
+"Sync with Reminders" = "Synk med Påminnelser";
 
 /* History header */
 "Your history" = "Din historikk";

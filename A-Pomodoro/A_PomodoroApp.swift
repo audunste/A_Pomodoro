@@ -21,6 +21,7 @@ struct A_PomodoroApp: App {
         container: PersistenceController.shared.persistentContainer,
         sortKey: "startDate", delayedInit: true) { $0.isMine }
     @StateObject private var historyModel = HistoryModel()
+    @StateObject private var taskModel = TaskModel()
     #endif
 
     var body: some Scene {

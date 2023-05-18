@@ -1,3 +1,6 @@
 /* Bundle name */
 "CFBundleName" = "A•Pomodoro";
 
+/* Privacy - Reminders Usage Description */
+"NSRemindersUsageDescription" = "Lar deg bruke påminnelser som fokusoppgaver";
+

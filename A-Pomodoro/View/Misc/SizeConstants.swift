@@ -8,5 +8,6 @@
 import Foundation
 
 enum Size {
-    static let actionBarHeight = 56
+    static let tabBarHeight: CGFloat = 56
+    static let maxTimerWidth: CGFloat = 430
 }

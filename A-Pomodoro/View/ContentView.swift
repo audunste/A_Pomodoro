@@ -8,11 +8,6 @@
 import SwiftUI
 import CloudKit
 
-enum SheetType: String {
-    case none
-    case history
-    case settings
-}
 
 enum OverlayType: String {
     case none
@@ -48,6 +43,7 @@ struct ContentView: View {
         GeometryReader { geometry in
             ZStack {
                 VStack {
+                    #if os(iOS)
                     TabView(selection: $selection) {
                         TimerView(25, timerType: .pomodoro)
                             .tabItem {
@@ -66,12 +62,27 @@ struct ContentView: View {
                             .tag(TimerType.longBreak)
                     }
                     .foregroundColor(modelData.appColor.textColor)
-                    #if os(iOS)
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                     #else
-                    .tabViewStyle(.automatic)
+                    ZStack {
+                        let i: CGFloat = {
+                            switch selection {
+                            case .pomodoro:
+                                return 0
+                            case .shortBreak:
+                                return -1
+                            case .longBreak:
+                                return -2
+                            }
+                        }()
+                        TimerView(25, timerType: .pomodoro)
+                        .offset(x: geometry.size.width * i)
+                        TimerView(5, timerType: .shortBreak)
+                        .offset(x: geometry.size.width * (i + 1))
+                        TimerView(15, timerType: .longBreak)
+                        .offset(x: geometry.size.width * (i + 2))
+                    }
                     #endif
-                    #if os(iOS)
                     HStack(spacing: 8) {
                         Spacer()
                             .frame(width: 8)
@@ -102,7 +113,6 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? 0 : 8)
                     .fixedSize(horizontal: false, vertical: false)
-                    #endif
                 }
                 .onChange(of: selection) { newSelection in
                     updateAppColors(newSelection)
@@ -155,7 +165,10 @@ struct ContentView: View {
                 .buttonStyle(IconButton())
                 Spacer().frame(width: 16)
             }
-            .frame(height: 56)
+            .frame(height: Size.tabBarHeight)
+            TaskView(selectTaskHandler: {
+                self.sheet = .task
+            })
         }
         .background(modelData.appColor.backgroundColor)
         .blur(radius: overlay == .none ? 0 : 4)
@@ -184,6 +197,7 @@ struct ContentView: View {
             .environment(\.colorScheme, overlayScheme)
             .environment(\.shareHistory, {
                 ALog("share history")
+                #if os(iOS)
                 sheet = .none
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     PersistenceController.shared.presentCloudSharingController()
@@ -192,6 +206,7 @@ struct ContentView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                     self.overlay = .none
                 }
+                #endif
             })
         }
     }
