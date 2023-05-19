@@ -31,6 +31,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
             Thread.sleep(forTimeInterval: 5.0)
             //controller.makeSureDefaultsExist()
             controller.logObjectTree()
+            
             //controller.testShareOfHistory()
             //controller.resetReciprocation()
             //controller.reciprocateShares()

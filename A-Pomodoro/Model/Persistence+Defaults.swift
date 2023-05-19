@@ -56,7 +56,7 @@ extension PersistenceController {
             }
         }
     }
-    
+        
     func logObjectTree() {
         performAndWait { taskContext in
             do {

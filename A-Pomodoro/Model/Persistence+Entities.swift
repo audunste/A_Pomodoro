@@ -30,6 +30,7 @@ extension PersistenceController {
         return nil
     }
     
+    // Note: Expects to be performed on a CoreData context (same as one given)
     func getAssignOrCreateActiveTask(context: NSManagedObjectContext) -> Task? {
         if let task = self.getActiveTask(context: context) {
             return task

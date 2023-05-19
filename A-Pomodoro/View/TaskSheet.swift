@@ -22,21 +22,18 @@ struct TaskSheet: View {
     let showFooter = false
     #endif
   
-  /*
-    init() {
-        UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor(Color("BarText"))]
-    }
-    */
-  
+    @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
     @State private var presentedCategories: [TempCategory] = []
+    @State var activeCategory: String?
+    @State var activeTask: String?
 
     var body: some View {
         VStack(spacing: 0) {
             NavigationStack(path: $presentedCategories) {
-                CategoryList()
+                CategoryList(activeCategory: $activeCategory)
                 .navigationDestination(for: TempCategory.self) { category in
-                    TaskList(category: category)
+                    TaskList(category: category, activeTask: $activeTask)
                     .navigationBarBackButtonHidden()
                     .transition(.move(edge: .trailing))
                 }
@@ -53,15 +50,53 @@ struct TaskSheet: View {
                 SheetBottomBar()
             }
         }
+        .onChange(of: activeTask) {
+            newTask in
+            if presentedCategories.count > 0 {
+                self.activeCategory = presentedCategories[0].title
+                ALog("self.activeCategory: \(String(describing: self.activeCategory))")
+            }
+        }
+        .onAppear {
+            initActiveTask()
+        }
+        .onDisappear {
+            ALog("onDisappear cat: \(self.activeTask ?? "nil") task: \(self.activeCategory ?? "nil")")
+        }
+    }
+
+    func initActiveTask() {
+        viewContext.perform {
+            guard let task = PersistenceController.active.getAssignOrCreateActiveTask(context: viewContext) else {
+                ALog(level: .warning, "No active task")
+                return
+            }
+            guard let category = task.category else {
+                ALog(level: .warning, "No active category")
+                return
+            }
+            self.activeTask = task.title ?? .defaultTask
+            self.activeCategory = category.title ?? .defaultCategory
+            ALog("self.activeTask: \(self.activeTask ?? "nil")")
+        }
     }
 
 }
 
-struct CategoryList: View {
+extension String {
+    static var defaultTask: String {
+        NSLocalizedString("Default Task", comment: "Name of default task")
+    }
+    static var defaultCategory: String {
+        NSLocalizedString("Default Category", comment: "Name of default category")
+    }
+}
 
+struct CategoryList: View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) var categories: FetchedResults<Category>
     @State var reminderCategories: [TempCategory] = []
     @State var showSyncButton: Bool = false
+    @Binding var activeCategory: String?
     
     private var myCategories: [Category] {
         categories.filter { $0.isMine }
@@ -75,12 +110,12 @@ struct CategoryList: View {
             }
             var tempTasks = [String]()
             for case let task as Task in tasks {
-                tempTasks.append(task.title ?? NSLocalizedString("Default Task", comment: "Name of default task"))
+                tempTasks.append(task.title ?? .defaultTask)
             }
             if tempTasks.isEmpty {
                 continue
             }
-            retval.append(TempCategory(title: cat.title ?? NSLocalizedString("Default Category", comment: "Name of default category"), tasks: tempTasks))
+            retval.append(TempCategory(title: cat.title ?? .defaultCategory, tasks: tempTasks))
         }
         for tempCat in reminderCategories {
             if let i = retval.firstIndex(where: { $0.title == tempCat.title }) {
@@ -104,7 +139,7 @@ struct CategoryList: View {
                 List {
                     ForEach(mergedCategories, id: \.title) {
                         cat in
-                        CategoryItem(category: cat)
+                        CategoryItem(category: cat, isSelected: cat.title == activeCategory)
                     }
                     if showSyncButton {
                         Button {
@@ -149,7 +184,7 @@ struct CategoryList: View {
             updateCategories()
         }
     }
-    
+        
     func updateCategories() {
         let authStatus = EKEventStore.authorizationStatus(for: .reminder)
         if authStatus == .notDetermined {
@@ -195,21 +230,13 @@ struct CategoryList: View {
 
 struct CategoryItem: View {
     var category: TempCategory
+    var isSelected: Bool
     
     var body: some View {
         NavigationLink(value: category) {
             Text(category.title)
         }
-        /*
-            HStack {
-                Text(category.title)
-                Spacer()
-                Image(systemName: "chevron.right")
-                .frame(width: 24, height: 24)
-            }
-            .padding(EdgeInsets(top: 16, leading: 24, bottom: 8, trailing: 24))
-        }
-        */
+        .listRowBackground(isSelected ? Color(white: 0.5, opacity: 0.4) : Color.clear)
     }
 }
 
@@ -218,6 +245,7 @@ struct TaskHeader: View {
     var body: some View {
         HStack {
             Text("Categories")
+            .frame(height: 24)
             .font(.regularTitle)
             .padding(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
         }
@@ -230,6 +258,7 @@ struct TaskHeader: View {
 struct TaskList: View {
     @Environment(\.up) var up
     var category: TempCategory
+    @Binding var activeTask: String?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -260,14 +289,26 @@ struct TaskList: View {
             .background(Color("BarBackground"))
             .foregroundColor(Color("BarText"))
             .fixedSize(horizontal: false, vertical: true)
-            List(category.tasks, id: \.self) {
-                task in
-                Text(task)
+            List {
+                ForEach(category.tasks, id: \.self) {
+                    task in
+                    Button {
+                        ALog("onTap Task")
+                        self.activeTask = task
+                    } label: {
+                        Text(task)
+                    }
+                    .buttonStyle(.borderless)
+                    .listRowBackground(activeTask == task ? Color(white: 0.5, opacity: 0.4) : Color.clear)
+                }
             }
             .listStyle(.plain)
             .frame(maxHeight: .infinity)
             .background(Color("Background"))
             .foregroundColor(Color("PrimaryText"))
+        }
+        .onAppear {
+            ALog("activeTask: \(String(describing: activeTask))")
         }
     }
 }
