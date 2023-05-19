@@ -37,25 +37,25 @@ extension PersistenceController {
         }
         let request = Task.fetchRequest()
         request.predicate = NSPredicate(format: "title == nil")
+        var newTask: Task? = nil
         do {
             let unfilteredEntries = try request.execute()
             let entries = unfilteredEntries.filter { $0.isMine }
             switch entries.count {
             case 0:
                 ALog(level: .info, "No default task available. Creating it.")
-                return try doAddTask(context: context)
+                newTask = try doAddTask(context: context)
             case 1:
-                self.activeTaskId = entries[0].objectID
-                return entries[0]
+                newTask = entries[0]
             default:
                 ALog(level: .warning, "Multiple default tasks available, using task \(entries[0])")
-                self.activeTaskId = entries[0].objectID
-                return entries[0]
+                newTask = entries[0]
             }
         } catch {
             ALog(level: .error, "Failed to get tasks: \(error)")
         }
-        return nil
+        self.setActiveTask(newTask, context)
+        return newTask
     }
 
     func addPomodoroEntry(
@@ -171,5 +171,80 @@ extension PersistenceController {
         history.allowComments = allowComments
         return history
     }
+       
+    func applyActiveTask(
+        _ context: NSManagedObjectContext,
+        taskTitle: String?,
+        categoryTitle: String?,
+        completion: @escaping (Task) throws -> Void)
+    {
+        context.perform {
+            // return if no change needed
+            let task = self.getAssignOrCreateActiveTask(context: context)
+            if taskTitle == task?.title && categoryTitle == task?.category?.title {
+                ALog("No change to active task")
+                return
+            }
             
+            do {
+                // if category does not exist, create it
+                let categoryRequest = Category.fetchRequest()
+                categoryRequest.predicate = NSPredicate(format: "title == %@", categoryTitle ?? NSNull())
+                let unfilteredCategories = try categoryRequest.execute()
+                let categories = unfilteredCategories.filter { $0.isMine }
+                var category: Category? = nil
+                if categories.count == 0 {
+                    ALog("No matching category for \(categoryTitle ?? "nil"), will create")
+                    category = try self.doAddCategory(context: context)
+                    category?.title = categoryTitle
+                    try context.save()
+                    if category!.objectID.isTemporaryID {
+                        ALog("objectId is temporary even after save")
+                    }
+                } else {
+                    if categories.count > 1 {
+                        ALog(level: .warning, "More than one Category matches \(categoryTitle ?? "nil")")
+                    } else {
+                        ALog("Found existing Category")
+                    }
+                    category = categories[0]
+                }
+                guard let category = category else {
+                    return
+                }
+
+                // if task does not exist, create it
+                let taskRequest = Task.fetchRequest()
+                taskRequest.predicate = NSPredicate(format: "title == %@", taskTitle ?? NSNull())
+                let unfilteredTasks = try taskRequest.execute()
+                let tasks = unfilteredTasks.filter { $0.isMine }
+                var task: Task? = nil
+                if tasks.count == 0 {
+                    ALog("No match task for \(taskTitle ?? "nil"), will create")
+                    task = try self.doAddTask(title: taskTitle, category: category, context: context)
+                    try context.save()
+                    if task!.objectID.isTemporaryID {
+                        ALog(level: .warning, "Task objectId is temporary even after save")
+                    }
+                } else {
+                    if tasks.count > 1 {
+                        ALog(level: .warning, "More than one Task matches \(taskTitle ?? "nil")")
+                    } else {
+                        ALog("Found existing Task")
+                    }
+                    task = tasks[0]
+                }
+                guard let task = task else {
+                    return
+                }
+
+                // set active task
+                self.setActiveTask(task, context)
+                try completion(task)
+            } catch {
+                ALog("Error applyActiveTask: \(error)")
+            }
+        }
+    
+    }
 }

@@ -67,6 +67,7 @@ struct TaskSheet: View {
                 self.activeCategory = presentedCategories[0].title
                 ALog("self.activeCategory: \(String(describing: self.activeCategory))")
             }
+            ALog("self.activeTask: \(String(describing: self.activeTask))")
         }
         .onAppear {
             initActiveTask()
@@ -86,85 +87,21 @@ struct TaskSheet: View {
     }
     
     func applyActiveTask() {
-        viewContext.perform {
-            // return if no change needed
-            let controller = PersistenceController.active
-            let task = controller.getAssignOrCreateActiveTask(context: viewContext)
-            let currTask = task?.title ?? .defaultTask
-            let currCat = task?.category?.title ?? .defaultCategory
-            if self.activeTask == currTask && self.activeCategory == currCat {
-                ALog("No change to active task")
-                return
-            }
-            
-            do {
-                // if category does not exist, create it
-                let categoryRequest = Category.fetchRequest()
-                categoryRequest.predicate = NSPredicate(format: "title == %@", self.selectedCategoryTitle ?? NSNull())
-                let unfilteredCategories = try categoryRequest.execute()
-                let categories = unfilteredCategories.filter { $0.isMine }
-                var category: Category? = nil
-                if categories.count == 0 {
-                    ALog("No matching category for \(self.activeCategory ?? "nil"), will create")
-                    category = try controller.doAddCategory(context: viewContext)
-                    category?.title = self.selectedCategoryTitle
+        let controller = PersistenceController.active
+        controller.applyActiveTask(viewContext, taskTitle: self.selectedTaskTitle, categoryTitle: self.selectedCategoryTitle, completion:
+        {
+            task in
+            // if focus pomodoro in progress, change its task
+            if let entry = lastPomodoroEntryBinder.managedObject {
+                if entry.isRunning && entry.stage % 2 == 0 {
+                    entry.task = task
                     try viewContext.save()
-                    if category!.objectID.isTemporaryID {
-                        ALog("objectId is temporary even after save")
-                    }
-                } else {
-                    if categories.count > 1 {
-                        ALog(level: .warning, "More than one Category matches \(self.activeCategory ?? "nil")")
-                    } else {
-                        ALog("Found existing Category")
-                    }
-                    category = categories[0]
-                }
-                guard let category = category else {
                     return
                 }
-
-                // if task does not exist, create it
-                let taskRequest = Task.fetchRequest()
-                taskRequest.predicate = NSPredicate(format: "title == %@", self.selectedTaskTitle ?? NSNull())
-                let unfilteredTasks = try taskRequest.execute()
-                let tasks = unfilteredTasks.filter { $0.isMine }
-                var task: Task? = nil
-                if tasks.count == 0 {
-                    ALog("No match task for \(self.activeTask ?? "nil"), will create")
-                    task = try controller.doAddTask(title: self.activeTask, category: category, context: viewContext)
-                    try viewContext.save()
-                    if task!.objectID.isTemporaryID {
-                        ALog(level: .warning, "Task objectId is temporary even after save")
-                    }
-                } else {
-                    if tasks.count > 1 {
-                        ALog(level: .warning, "More than one Task matches \(self.activeTask ?? "nil")")
-                    } else {
-                        ALog("Found existing Task")
-                    }
-                    task = tasks[0]
-                }
-                guard let task = task else {
-                    return
-                }
-
-                // set active task
-                controller.activeTaskId = task.objectID
-                // if focus pomodoro in progress, change its task
-                if let entry = lastPomodoroEntryBinder.managedObject {
-                    if entry.isRunning && entry.stage % 2 == 0 {
-                        entry.task = task
-                        try viewContext.save()
-                        return
-                    }
-                }
-                // else ensure pomodoro stage with 25 timer
-                focusAndBreakStage = ((focusAndBreakStage + 4) / 4) * 4
-            } catch {
-                ALog("Error applyActiveTask: \(error)")
             }
-        }
+            // else ensure pomodoro stage with 25 timer
+            focusAndBreakStage = ((focusAndBreakStage + 4) / 4) * 4
+        })
     }
 
     func initActiveTask() {
@@ -389,16 +326,24 @@ struct TaskList: View {
                         ALog("onTap Task")
                         self.activeTask = task
                     } label: {
-                        Text(task)
+                        HStack {
+                            Text(task)
+                            Spacer()
+                        }
                     }
-                    .buttonStyle(.borderless)
-                    .listRowBackground(activeTask == task ? Color(white: 0.5, opacity: 0.4) : Color.clear)
+                    .frame(maxWidth: .infinity)
+                    .buttonStyle(UnstyledButton())
+                    .listRowBackground(activeTask == task ? Color(white: 0.5, opacity: 0.4) : Color(white: 0.5, opacity: 0.0001))
                 }
             }
             .listStyle(.plain)
             .frame(maxHeight: .infinity)
             .background(Color("Background"))
             .foregroundColor(Color("PrimaryText"))
+        }
+        .onChange(of: activeTask) {
+            newTask in
+            ALog("detail new task: \(String(describing: newTask))")
         }
         .onAppear {
             ALog("activeTask: \(String(describing: activeTask))")

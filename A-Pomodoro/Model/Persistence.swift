@@ -27,9 +27,12 @@ struct TransactionAuthor {
     static let app = "app"
 }
 
-class PersistenceController: NSObject, ObservableObject {
+extension String {
+    static var activeTaskIdKey: String { "activeTaskId" }
+}
 
-    @Published var activeTaskId: NSManagedObjectID?
+class PersistenceController: NSObject, ObservableObject {
+    @Published public private(set) var activeTaskId: NSManagedObjectID?
 
     var inMemory: Bool = false
 
@@ -41,6 +44,25 @@ class PersistenceController: NSObject, ObservableObject {
             return activeTask
         }
         return nil
+    }
+    
+    func setActiveTask(_ task: Task?, _ context: NSManagedObjectContext) {
+        guard let task = task else {
+            self.activeTaskId = nil
+            UserDefaults.standard.removeObject(forKey: .activeTaskIdKey)
+            return
+        }
+        if task.objectID.isTemporaryID {
+            do {
+                try context.obtainPermanentIDs(for: [task])
+            } catch {
+                ALog(level: .warning, "failed to obtain permanent id: \(error)")
+                self.activeTaskId = nil
+                UserDefaults.standard.removeObject(forKey: .activeTaskIdKey)
+            }
+        }
+        self.activeTaskId = task.objectID
+        UserDefaults.standard.setValue(task.objectID.uriRepresentation().absoluteString, forKey: .activeTaskIdKey)
     }
     
     func getHistoryByObjectIdUrl(string: String?) -> History? {
@@ -249,6 +271,14 @@ class PersistenceController: NSObject, ObservableObject {
 
     init(inMemory: Bool = false) {
         self.inMemory = inMemory
+        super.init()
+        guard let activeTaskIdString = UserDefaults.standard.object(forKey: .activeTaskIdKey) as? String,
+            let url = URL(string: activeTaskIdString),
+            let objectId = persistentContainer.persistentStoreCoordinator.managedObjectID(forURIRepresentation: url)
+        else {
+            return
+        }
+        self.activeTaskId = objectId
     }
     
     private var _privatePersistentStore: NSPersistentStore?

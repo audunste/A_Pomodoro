@@ -11,37 +11,6 @@ import CoreData
 import CloudKit
 
 extension PersistenceController {
-
-    /*
-    func makeSureDefaultsExist() {
-        performAndWait { taskContext in
-            do {
-                
-                let request = Task.fetchRequest()
-                let count = try taskContext.count(for: request)
-                if count > 0 && getOwnHistory() != nil {
-                    let tasks = try request.execute()
-                    for task in tasks {
-                        if task.category == nil {
-                            task.category = try self.getOrCreateDefaultCategory(taskContext)
-                        }
-                    }
-                    ALog("history count: \(try taskContext.count(for: History.fetchRequest()))")
-                    ALog("category count: \(try taskContext.count(for: Category.fetchRequest()))")
-                    ALog("task count: \(try taskContext.count(for: Task.fetchRequest()))")
-                    ALog("pomodoro count: \(try taskContext.count(for: PomodoroEntry.fetchRequest()))")
-                    return
-                }
-                let activeTask = try self.doAddTask(context: taskContext)
-                try taskContext.save()
-                self.activeTaskId = activeTask.objectID
-                ALog("created default task with category: \(String(describing: activeTask.category))")
-            } catch {
-                fatalError("#\(#function): error: \(error)")
-            }
-        }
-    }
-    */
     
     func fixDefaultTask() {
         performAndWait { taskContext in
@@ -49,8 +18,15 @@ extension PersistenceController {
                 let request = Task.fetchRequest()
                 let allTasks = try request.execute()
                 for task in allTasks {
-                    ALog("task: \(task) \(task.isMine)")
+                    if !task.isMine {
+                        continue
+                    }
+                    if task.title == nil && task.category?.title != nil {
+                        taskContext.delete(task)
+                        ALog("will delete \(task) in \(task.category!.title!)")
+                    }
                 }
+                try taskContext.save()
             } catch {
                 fatalError("#\(#function): error: \(error)")
             }

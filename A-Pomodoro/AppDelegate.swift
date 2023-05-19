@@ -39,6 +39,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
             //controller.fixHistoryShare()
             //controller.adoptOrphanedPomodoros()
             //controller.mergeDefaultsAfterLaunch()
+            //controller.fixDefaultTask()
             
             /*
             if let url = URL(string: "https://www.icloud.com/share/071MGEttkRgkJmEtpqzi7p9yw#Pomodoro_history") {
