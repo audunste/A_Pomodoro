@@ -103,6 +103,7 @@ extension PersistenceController {
     ) throws -> Task
     {
         let task = Task(context: context)
+        task.title = title
         if let category = category {
             task.category = category
         } else if self.getActiveTask(context: context)?.category != nil {

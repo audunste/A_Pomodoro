@@ -10,6 +10,15 @@ import CoreData
 import CloudKit
 import EventKit
 
+extension String {
+    static var defaultTask: String {
+        NSLocalizedString("Default Task", comment: "Name of default task")
+    }
+    static var defaultCategory: String {
+        NSLocalizedString("Default Category", comment: "Name of default category")
+    }
+}
+
 struct TempCategory: Hashable {
     var title: String
     var tasks: [String]
@@ -22,8 +31,10 @@ struct TaskSheet: View {
     let showFooter = false
     #endif
   
+    @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
+    @AppStorage("focusAndBreakStage") private var focusAndBreakStage = 0
     @State private var presentedCategories: [TempCategory] = []
     @State var activeCategory: String?
     @State var activeTask: String?
@@ -62,6 +73,97 @@ struct TaskSheet: View {
         }
         .onDisappear {
             ALog("onDisappear cat: \(self.activeTask ?? "nil") task: \(self.activeCategory ?? "nil")")
+            applyActiveTask()
+        }
+    }
+    
+    var selectedCategoryTitle: String? {
+        activeCategory == String.defaultCategory ? nil : activeCategory
+    }
+    
+    var selectedTaskTitle: String? {
+        activeTask == String.defaultTask ? nil : activeTask
+    }
+    
+    func applyActiveTask() {
+        viewContext.perform {
+            // return if no change needed
+            let controller = PersistenceController.active
+            let task = controller.getAssignOrCreateActiveTask(context: viewContext)
+            let currTask = task?.title ?? .defaultTask
+            let currCat = task?.category?.title ?? .defaultCategory
+            if self.activeTask == currTask && self.activeCategory == currCat {
+                ALog("No change to active task")
+                return
+            }
+            
+            do {
+                // if category does not exist, create it
+                let categoryRequest = Category.fetchRequest()
+                categoryRequest.predicate = NSPredicate(format: "title == %@", self.selectedCategoryTitle ?? NSNull())
+                let unfilteredCategories = try categoryRequest.execute()
+                let categories = unfilteredCategories.filter { $0.isMine }
+                var category: Category? = nil
+                if categories.count == 0 {
+                    ALog("No matching category for \(self.activeCategory ?? "nil"), will create")
+                    category = try controller.doAddCategory(context: viewContext)
+                    category?.title = self.selectedCategoryTitle
+                    try viewContext.save()
+                    if category!.objectID.isTemporaryID {
+                        ALog("objectId is temporary even after save")
+                    }
+                } else {
+                    if categories.count > 1 {
+                        ALog(level: .warning, "More than one Category matches \(self.activeCategory ?? "nil")")
+                    } else {
+                        ALog("Found existing Category")
+                    }
+                    category = categories[0]
+                }
+                guard let category = category else {
+                    return
+                }
+
+                // if task does not exist, create it
+                let taskRequest = Task.fetchRequest()
+                taskRequest.predicate = NSPredicate(format: "title == %@", self.selectedTaskTitle ?? NSNull())
+                let unfilteredTasks = try taskRequest.execute()
+                let tasks = unfilteredTasks.filter { $0.isMine }
+                var task: Task? = nil
+                if tasks.count == 0 {
+                    ALog("No match task for \(self.activeTask ?? "nil"), will create")
+                    task = try controller.doAddTask(title: self.activeTask, category: category, context: viewContext)
+                    try viewContext.save()
+                    if task!.objectID.isTemporaryID {
+                        ALog(level: .warning, "Task objectId is temporary even after save")
+                    }
+                } else {
+                    if tasks.count > 1 {
+                        ALog(level: .warning, "More than one Task matches \(self.activeTask ?? "nil")")
+                    } else {
+                        ALog("Found existing Task")
+                    }
+                    task = tasks[0]
+                }
+                guard let task = task else {
+                    return
+                }
+
+                // set active task
+                controller.activeTaskId = task.objectID
+                // if focus pomodoro in progress, change its task
+                if let entry = lastPomodoroEntryBinder.managedObject {
+                    if entry.isRunning && entry.stage % 2 == 0 {
+                        entry.task = task
+                        try viewContext.save()
+                        return
+                    }
+                }
+                // else ensure pomodoro stage with 25 timer
+                focusAndBreakStage = ((focusAndBreakStage + 4) / 4) * 4
+            } catch {
+                ALog("Error applyActiveTask: \(error)")
+            }
         }
     }
 
@@ -81,15 +183,6 @@ struct TaskSheet: View {
         }
     }
 
-}
-
-extension String {
-    static var defaultTask: String {
-        NSLocalizedString("Default Task", comment: "Name of default task")
-    }
-    static var defaultCategory: String {
-        NSLocalizedString("Default Category", comment: "Name of default category")
-    }
 }
 
 struct CategoryList: View {

@@ -31,6 +31,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
             Thread.sleep(forTimeInterval: 5.0)
             //controller.makeSureDefaultsExist()
             controller.logObjectTree()
+            controller.printEntityCounts()
             
             //controller.testShareOfHistory()
             //controller.resetReciprocation()
@@ -38,10 +39,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ObservableObject {
             //controller.fixHistoryShare()
             //controller.adoptOrphanedPomodoros()
             //controller.mergeDefaultsAfterLaunch()
-            Thread.sleep(forTimeInterval: 5.0)
-            controller.printEntityCounts()
-            Thread.sleep(forTimeInterval: 5.0)
-            controller.printEntityCounts()
             
             /*
             if let url = URL(string: "https://www.icloud.com/share/071MGEttkRgkJmEtpqzi7p9yw#Pomodoro_history") {

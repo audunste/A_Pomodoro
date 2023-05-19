@@ -10,11 +10,15 @@ import SwiftUI
 struct TaskContent: View {
     var selectTaskHandler: () -> Void
 
+    @Environment(\.managedObjectContext) var viewContext
     @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
     @Environment(\.mainWindowSize) var mainWindowSize
 
     private var task: Task? {
-        lastPomodoroEntryBinder.managedObject?.task
+        if let activeTask = PersistenceController.active.getActiveTask(context: viewContext) {
+            return activeTask
+        }
+        return lastPomodoroEntryBinder.managedObject?.task
     }
     
     private var title: String? {
