@@ -40,10 +40,12 @@ struct A_PomodoroApp: App {
                     .environmentObject(modelData)
                     .environmentObject(lastPomodoroEntryBinder)
                     .environmentObject(historyModel)
+                    .environmentObject(taskModel)
                     .preferredColorScheme(.dark)
             }
             .onAppear() {
                 historyModel.viewContext = persistentContainer.viewContext
+                taskModel.viewContext = persistentContainer.viewContext
             }
         }
         #if os(macOS)

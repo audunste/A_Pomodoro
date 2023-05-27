@@ -8,13 +8,17 @@
 import SwiftUI
 import EventKit
 
+
 struct TaskContent: View {
     var selectTaskHandler: () -> Void
 
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.mainWindowSize) var mainWindowSize
+    @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
     @StateObject var controller = PersistenceController.active
     @State var task: Task? = nil
+    @State var completion: Bool? = nil
+    @AppStorage("focusAndBreakStage") private var focusAndBreakStage = 0
 
     private var title: String? {
         task?.title
@@ -27,23 +31,22 @@ struct TaskContent: View {
         return title.isEmpty
     }
     
-    private var canTaskBeCompleted: Bool {
-        guard let title = title else {
-            return false
-        }
-        return !title.isEmpty
-    }
-
     var body: some View {
         HStack(spacing: 0) {
-            if canTaskBeCompleted {
+            if let completion = completion {
                 Button {
-                    completeTask()
+                    if !completion {
+                        completeTask()
+                    }
                 } label: {
-                    Image(systemName: "circle")
-                    .frame(width: 24, height: 24)
+                    Image(systemName: completion ? "checkmark.circle.fill" : "circle")
+                    .resizable()
+                    .frame(width: 20, height: 20)
                 }
+                .frame(width: 32, height: 32)
                 .buttonStyle(IconButton2())
+            } else if !isDefaultTask {
+                Spacer().frame(width: 32, height: 32)
             }
             Text(title ?? "Select Task")
             .font(.system(size: mainWindowSize.width < 390 ? 14 : 16))
@@ -53,39 +56,55 @@ struct TaskContent: View {
                 selectTaskHandler()
             } label: {
                 Image(systemName: "chevron.down.circle")
-                .frame(width: 24, height: 24)
+                .resizable()
+                .frame(width: 20, height: 20)
             }
+            .frame(width: 32, height: 32)
             .buttonStyle(IconButton2())
         }
         .opacity(isDefaultTask ? 0.9 : 1.0)
         .onChange(of: controller.activeTaskId) {
             newTask in
+            self.completion = nil
             self.task = controller.getActiveTask(context: viewContext)
+            updateCompletion()
+        }
+        .onChange(of: lastPomodoroEntryBinder.managedObject) {
+            newEntry in
+            if self.task == nil {
+                if let entry = newEntry {
+                    if entry.isRunning && entry.task != nil {
+                        controller.setActiveTask(entry.task, viewContext)
+                    }
+                }
+            }
         }
         .onAppear {
             self.task = controller.getActiveTask(context: viewContext)
+            updateCompletion()
         }
     }
     
-    func completeTask() {
-        guard let task = task else {
+    func updateCompletion() {
+        guard let task = task,
+            let title = title,
+            !title.isEmpty
+        else {
             ALog(level: .warning, "No task to complete")
             return
         }
         let store = EKEventStore()
         let reminderLists = store.calendars(for: .reminder)
-        guard let list = reminderLists.first(where: { $0.title == task.title }) else {
-            ALog(level: .warning, "No Reminders List matching \(task.title!)")
+        guard let list = reminderLists.first(where: { $0.title == task.category?.title }) else {
+            ALog(level: .warning, "No Reminders List matching \(task.category?.title ?? "nil")")
             return
         }
-        let pred = store.predicateForIncompleteReminders(withDueDateStarting: nil, ending: nil, calendars: [list])
+        let pred = store.predicateForReminders(in: [list])
         store.fetchReminders(matching: pred, completion: {(_ reminders: [Any]?) -> Void in
             guard let reminders = reminders as? [EKReminder?] else {
                 ALog("Did not get EKReminder list from fetchReminders")
                 return
             }
-            var match: EKReminder? = nil
-            var next: EKReminder? = nil
             for reminder: EKReminder? in reminders {
                 // Do something for each reminder.
                 guard let reminder = reminder,
@@ -94,22 +113,24 @@ struct TaskContent: View {
                     ALog("Reminder is nil")
                     continue
                 }
-                if match != nil && next == nil {
-                    next = reminder
-                } else if title == task.title {
-                    match = reminder
+                if title == task.title {
+                    self.completion = reminder.isCompleted
                 }
             }
-            
-            /*
-            tempCats.append(tempCat)
-            if tempCats.count == reminderLists.count {
-                self.reminderCategories = tempCats
-            }
-            */
         })
-        
-        var match: EKReminder? = nil
+    }
+    
+    func completeTask() {
+        TaskModel.completeTask(task: task, activateNext: true) { callback in
+            switch(callback) {
+            case .fail:
+                self.completion = nil
+            case .processing:
+                self.completion = true
+            default:
+                break
+            }
+        }
     }
 }
 

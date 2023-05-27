@@ -19,9 +19,30 @@ extension String {
     }
 }
 
+enum TaskStatus {
+    case todo
+    case completed
+    case cancelled
+    case incompletable
+}
+
+struct TempTask: Hashable, Identifiable {
+    var title: String
+    var status: TaskStatus
+    var id: String { title }
+    init(task: Task) {
+        self.title = task.title ?? .defaultTask
+        self.status = task.title == nil ? .incompletable : .cancelled
+    }
+    init(reminder: EKReminder) {
+        self.title = reminder.title
+        self.status = reminder.isCompleted ? .completed : .todo
+    }
+}
+
 struct TempCategory: Hashable {
     var title: String
-    var tasks: [String]
+    var tasks: [TempTask]
 }
 
 struct TaskSheet: View {
@@ -124,7 +145,7 @@ struct TaskSheet: View {
 
 struct CategoryList: View {
     @FetchRequest(sortDescriptors: [SortDescriptor(\.title)]) var categories: FetchedResults<Category>
-    @State var reminderCategories: [TempCategory] = []
+    @EnvironmentObject var taskModel: TaskModel
     @State var showSyncButton: Bool = false
     @Binding var activeCategory: String?
     
@@ -134,28 +155,51 @@ struct CategoryList: View {
     
     private var mergedCategories: [TempCategory] {
         var retval = [TempCategory]()
-        for cat in myCategories {
-            guard let tasks = cat.tasks else {
-                continue
-            }
-            var tempTasks = [String]()
-            for case let task as Task in tasks {
-                tempTasks.append(task.title ?? .defaultTask)
+        // First add incomplete reminders in order
+        for tempCat in taskModel.reminderCategories {
+            var tempTasks = [TempTask]()
+            for tempTask in tempCat.tasks {
+                if tempTask.status == .todo {
+                    tempTasks.append(tempTask)
+                }
             }
             if tempTasks.isEmpty {
                 continue
             }
-            retval.append(TempCategory(title: cat.title ?? .defaultCategory, tasks: tempTasks))
+            retval.append(TempCategory(title: tempCat.title, tasks: tempTasks))
         }
-        for tempCat in reminderCategories {
-            if let i = retval.firstIndex(where: { $0.title == tempCat.title }) {
-                for tempTask in tempCat.tasks {
-                    if !retval[i].tasks.contains(tempTask) {
-                        retval[i].tasks.append(tempTask)
+        // Add categories and tasks that have completed pomodoros
+        for cat in myCategories {
+            guard let tasks = cat.tasks else {
+                continue
+            }
+            if let i = retval.firstIndex(where: { $0.title == cat.title }) {
+                for case let task as Task in tasks {
+                    if !retval[i].tasks.contains(where: { $0.title == task.title }) {
+                        retval[i].tasks.append(TempTask(task: task))
                     }
                 }
             } else {
-                retval.append(tempCat)
+                var tempTasks = [TempTask]()
+                for case let task as Task in tasks {
+                    tempTasks.append(TempTask(task: task))
+                }
+                if tempTasks.isEmpty {
+                    continue
+                }
+                retval.append(TempCategory(title: cat.title ?? .defaultCategory, tasks: tempTasks))
+            }
+        }
+        // Change status to .completed for completed reminders that have pomodoros
+        for tempCat in taskModel.reminderCategories {
+            if let i = retval.firstIndex(where: { $0.title == tempCat.title }) {
+                for tempTask in tempCat.tasks {
+                    if tempTask.status == .completed,
+                        let j = retval[i].tasks.firstIndex(where: { $0.title == tempTask.title })
+                    {
+                        retval[i].tasks[j].status = .completed
+                    }
+                }
             }
         }
         return retval
@@ -224,38 +268,9 @@ struct CategoryList: View {
         if self.showSyncButton {
             self.showSyncButton = false
         }
-        let store = EKEventStore()
-        let reminderLists = store.calendars(for: .reminder)
-        var tempCats = [TempCategory]()
-        for list in reminderLists {
-            let pred = store.predicateForIncompleteReminders(withDueDateStarting: nil, ending: nil, calendars: [list])
-            var tempCat = TempCategory(title: list.title, tasks: [])
-            store.fetchReminders(matching: pred, completion: {(_ reminders: [Any]?) -> Void in
-                guard let reminders = reminders as? [EKReminder?] else {
-                    ALog("Did not get EKReminder list from fetchReminders")
-                    tempCats.append(tempCat)
-                    if tempCats.count == reminderLists.count {
-                        self.reminderCategories = tempCats
-                    }
-                    return
-                }
-                for reminder: EKReminder? in reminders {
-                    // Do something for each reminder.
-                    guard let reminder = reminder,
-                        let title = reminder.title
-                    else {
-                        ALog("Reminder is nil")
-                        continue
-                    }
-                    tempCat.tasks.append(title)
-                }
-                tempCats.append(tempCat)
-                if tempCats.count == reminderLists.count {
-                    self.reminderCategories = tempCats
-                }
-            })
-        }
+        taskModel.updateCategories()
     }
+    
 }
 
 struct CategoryItem: View {
@@ -267,6 +282,41 @@ struct CategoryItem: View {
             Text(category.title)
         }
         .listRowBackground(isSelected ? Color(white: 0.5, opacity: 0.4) : Color.clear)
+    }
+}
+
+struct TaskItem: View {
+    var task: TempTask
+    var isSelected: Bool
+    var selectTaskHandler: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            if task.status == .todo || task.status == .completed {
+                Button {
+                    ALog("onTap Task Complete")
+                    //selectTaskHandler()
+                } label: {
+                    Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
+                    .resizable()
+                    .frame(width: 24, height: 24)
+                    .padding(.trailing, 12)
+                }
+                .buttonStyle(UnstyledButton())
+            }
+            Button {
+                ALog("onTap Task")
+                selectTaskHandler()
+            } label: {
+                HStack {
+                    Text(task.title)
+                    Spacer()
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .buttonStyle(UnstyledButton())
+        }
+        .listRowBackground(isSelected ? Color(white: 0.5, opacity: 0.4) : Color(white: 0.5, opacity: 0.0001))
     }
 }
 
@@ -291,6 +341,11 @@ struct TaskList: View {
     @Binding var activeTask: String?
     
     var body: some View {
+        let todoTasks = category.tasks.filter({ $0.status == .todo })
+        let completedTasks = category.tasks.filter({ $0.status == .completed })
+        let cancelledTasks = category.tasks.filter({ $0.status == .cancelled })
+        let showSections = completedTasks.count > 0 || cancelledTasks.count > 0
+        
         VStack(spacing: 0) {
             HStack {
                 Button {
@@ -320,20 +375,50 @@ struct TaskList: View {
             .foregroundColor(Color("BarText"))
             .fixedSize(horizontal: false, vertical: true)
             List {
-                ForEach(category.tasks, id: \.self) {
-                    task in
-                    Button {
-                        ALog("onTap Task")
-                        self.activeTask = task
-                    } label: {
-                        HStack {
-                            Text(task)
-                            Spacer()
+                if showSections {
+                    Section(header: Text("Todo")) {
+                        ForEach(todoTasks) {
+                            task in
+                            TaskItem(task: task,
+                                isSelected: activeTask == task.title,
+                                selectTaskHandler: {
+                                    self.activeTask = task.title
+                                })
                         }
                     }
-                    .frame(maxWidth: .infinity)
-                    .buttonStyle(UnstyledButton())
-                    .listRowBackground(activeTask == task ? Color(white: 0.5, opacity: 0.4) : Color(white: 0.5, opacity: 0.0001))
+                    if completedTasks.count > 0 {
+                        Section(header: Text("Completed")) {
+                            ForEach(completedTasks) {
+                                task in
+                                TaskItem(task: task,
+                                    isSelected: activeTask == task.title,
+                                    selectTaskHandler: {
+                                        self.activeTask = task.title
+                                    })
+                            }
+                        }
+                    }
+                    if cancelledTasks.count > 0 {
+                        Section(header: Text("Cancelled")) {
+                            ForEach(cancelledTasks) {
+                                task in
+                                TaskItem(task: task,
+                                    isSelected: activeTask == task.title,
+                                    selectTaskHandler: {
+                                        self.activeTask = task.title
+                                    })
+                            }
+                        }
+                    }
+                } else {
+                    ForEach(category.tasks) {
+                        task in
+                        TaskItem(task: task,
+                            isSelected: activeTask == task.title,
+                            selectTaskHandler: {
+                                self.activeTask = task.title
+                            })
+                    }
                 }
             }
             .listStyle(.plain)
