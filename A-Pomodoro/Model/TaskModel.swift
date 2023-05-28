@@ -17,26 +17,187 @@ enum CompleteTaskCallback {
     case complete
 }
 
-class TaskModel: ObservableObject {
+class TaskModel: NSObject, NSFetchedResultsControllerDelegate, ObservableObject {
 
-    @Published var reminderCategories: [TempCategory] = []
-
-    private var _viewContext: NSManagedObjectContext?
-    var viewContext: NSManagedObjectContext? {
-        set {
-            _viewContext = newValue
-            updateCategories()
-        }
-        get {
-            return _viewContext
+    @Published var completingTask: TempTask? = nil
+    @Published public private(set) var reminderCategories: [TempCategory] = [] {
+        didSet {
+            calcMergedCategories()
         }
     }
-
-    init(viewContext: NSManagedObjectContext? = nil) {
-        self.viewContext = viewContext
+    @Published public private(set) var myCategories: [Category] = [] {
+        didSet {
+            calcMergedCategories()
+        }
+    }
+    @Published public private(set) var mergedCategories: [TempCategory] = []
+    
+    private func calcMergedCategories() {
+        var retval = [TempCategory]()
+        // First add incomplete reminders in order
+        for tempCat in self.reminderCategories {
+            var tempTasks = [TempTask]()
+            for tempTask in tempCat.tasks {
+                if tempTask.status == .todo {
+                    tempTasks.append(tempTask)
+                }
+            }
+            if tempTasks.isEmpty {
+                continue
+            }
+            retval.append(TempCategory(title: tempCat.title, tasks: tempTasks))
+        }
+        // Add categories and tasks that have completed pomodoros
+        for cat in self.myCategories {
+            guard let tasks = cat.tasks else {
+                continue
+            }
+            if let i = retval.firstIndex(where: { $0.title == cat.title }) {
+                for case let task as Task in tasks {
+                    if !retval[i].tasks.contains(where: { $0.title == task.title }) {
+                        retval[i].tasks.append(TempTask(task: task))
+                    }
+                }
+            } else {
+                var tempTasks = [TempTask]()
+                for case let task as Task in tasks {
+                    tempTasks.append(TempTask(task: task))
+                }
+                if tempTasks.isEmpty {
+                    continue
+                }
+                retval.append(TempCategory(title: cat.title ?? .defaultCategory, tasks: tempTasks))
+            }
+        }
+        // Change status to .completed for completed reminders that have pomodoros
+        for tempCat in self.reminderCategories {
+            if let i = retval.firstIndex(where: { $0.title == tempCat.title }) {
+                for tempTask in tempCat.tasks {
+                    if tempTask.status == .completed,
+                        let j = retval[i].tasks.firstIndex(where: { $0.title == tempTask.title })
+                    {
+                        retval[i].tasks[j].status = .completed
+                    }
+                }
+            }
+        }
+        self.mergedCategories = retval
     }
     
-    func updateCategories() {
+    /*
+    var mergedCategories: AnyPublisher<[TempCategory], Never> {
+        Publishers
+            .CombineLatest($reminderCategories, $myCategories)
+            .map {
+                tuple in
+                let reminderCategories = tuple.0
+                let myCategories = tuple.1
+                var retval = [TempCategory]()
+                // First add incomplete reminders in order
+                for tempCat in reminderCategories {
+                    var tempTasks = [TempTask]()
+                    for tempTask in tempCat.tasks {
+                        if tempTask.status == .todo {
+                            tempTasks.append(tempTask)
+                        }
+                    }
+                    if tempTasks.isEmpty {
+                        continue
+                    }
+                    retval.append(TempCategory(title: tempCat.title, tasks: tempTasks))
+                }
+                // Add categories and tasks that have completed pomodoros
+                for cat in myCategories {
+                    guard let tasks = cat.tasks else {
+                        continue
+                    }
+                    if let i = retval.firstIndex(where: { $0.title == cat.title }) {
+                        for case let task as Task in tasks {
+                            if !retval[i].tasks.contains(where: { $0.title == task.title }) {
+                                retval[i].tasks.append(TempTask(task: task))
+                            }
+                        }
+                    } else {
+                        var tempTasks = [TempTask]()
+                        for case let task as Task in tasks {
+                            tempTasks.append(TempTask(task: task))
+                        }
+                        if tempTasks.isEmpty {
+                            continue
+                        }
+                        retval.append(TempCategory(title: cat.title ?? .defaultCategory, tasks: tempTasks))
+                    }
+                }
+                // Change status to .completed for completed reminders that have pomodoros
+                for tempCat in reminderCategories {
+                    if let i = retval.firstIndex(where: { $0.title == tempCat.title }) {
+                        for tempTask in tempCat.tasks {
+                            if tempTask.status == .completed,
+                                let j = retval[i].tasks.firstIndex(where: { $0.title == tempTask.title })
+                            {
+                                retval[i].tasks[j].status = .completed
+                            }
+                        }
+                    }
+                }
+                return retval
+            }.eraseToAnyPublisher()
+    }
+    */
+
+    private let categoriesController: NSFetchedResultsController<Category>
+    private let fetchRequest: NSFetchRequest<Category>
+
+
+
+    init(container: NSPersistentContainer) {
+        let context = container.viewContext
+        
+        self.fetchRequest = Category.fetchRequest()
+        self.fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: false)]
+        self.categoriesController = NSFetchedResultsController(
+            fetchRequest: self.fetchRequest,
+            managedObjectContext: context,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+        super.init()
+        categoriesController.delegate = self
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.postinit(container)
+        }
+    }
+
+    private func postinit(_ container: NSPersistentContainer) {
+        assert(Thread.isMainThread)
+        do {
+            try categoriesController.performFetch()
+        } catch {
+            let error = error as NSError
+            fatalError("Unresolved error \(error), \(error.userInfo)")
+        }
+        maybeUpdateCategories()
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        ALog("updating")
+        maybeUpdateCategories()
+    }
+    
+    private func maybeUpdateCategories() {
+        if let objects = self.categoriesController.fetchedObjects {
+            if !objects.isEmpty {
+                self.myCategories = objects.filter { $0.isMine }
+            }
+        }
+    }
+
+    private func setReminderCategories(_ cats: [TempCategory]) {
+        DispatchQueue.main.async {
+            self.reminderCategories = cats
+        }
+    }
+
+    func updateReminderCategories() {
         let authStatus = EKEventStore.authorizationStatus(for: .reminder)
         if authStatus != .authorized {
             return
@@ -53,7 +214,7 @@ class TaskModel: ObservableObject {
                     ALog("Did not get EKReminder list from fetchReminders")
                     tempCats.append(tempCat)
                     if tempCats.count == reminderLists.count {
-                        self.reminderCategories = tempCats
+                        self.setReminderCategories(tempCats)
                     }
                     return
                 }
@@ -69,22 +230,28 @@ class TaskModel: ObservableObject {
                 }
                 tempCats.append(tempCat)
                 if tempCats.count == reminderLists.count {
-                    self.reminderCategories = tempCats
+                    self.setReminderCategories(tempCats)
                 }
             })
         }
     }
     
     static func completeTask(task: Task?, activateNext: Bool, callback: @escaping (CompleteTaskCallback) -> Void) {
-        guard let task = task else {
+        guard let taskTitle = task?.title,
+            let categoryTitle = task?.category?.title
+        else {
             ALog(level: .warning, "No task to complete")
             callback(.fail)
             return
         }
+        completeTask(taskTitle: taskTitle, categoryTitle: categoryTitle, activateNext: activateNext, callback: callback)
+    }
+    
+    static func completeTask(taskTitle: String, categoryTitle: String, activateNext: Bool, callback: @escaping (CompleteTaskCallback) -> Void) {
         let store = EKEventStore()
         let reminderLists = store.calendars(for: .reminder)
-        guard let list = reminderLists.first(where: { $0.title == task.category?.title }) else {
-            ALog(level: .warning, "No Reminders List matching \(task.category?.title ?? "nil")")
+        guard let list = reminderLists.first(where: { $0.title == categoryTitle }) else {
+            ALog(level: .warning, "No Reminders List matching \(categoryTitle)")
             callback(.fail)
             return
         }
@@ -108,7 +275,7 @@ class TaskModel: ObservableObject {
                 }
                 if match != nil && next == nil && activateNext {
                     next = reminder
-                } else if title == task.title {
+                } else if title == taskTitle {
                     match = reminder
                 }
             }
@@ -119,7 +286,7 @@ class TaskModel: ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
                 if let next = next {
                     let controller = PersistenceController.active
-                    controller.applyActiveTask(controller.persistentContainer.viewContext, taskTitle: next.title, categoryTitle: task.category?.title)
+                    controller.applyActiveTask(controller.persistentContainer.viewContext, taskTitle: next.title, categoryTitle: categoryTitle)
                     {
                         newTask in
                         ALog("Just continuing with newTask \(newTask.title ?? "default")")

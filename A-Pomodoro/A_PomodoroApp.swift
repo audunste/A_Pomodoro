@@ -21,7 +21,7 @@ struct A_PomodoroApp: App {
         container: PersistenceController.shared.persistentContainer,
         sortKey: "startDate", delayedInit: true) { $0.isMine }
     @StateObject private var historyModel = HistoryModel()
-    @StateObject private var taskModel = TaskModel()
+    @StateObject private var taskModel = TaskModel(container: PersistenceController.shared.persistentContainer)
     #endif
 
     var body: some Scene {
@@ -45,7 +45,6 @@ struct A_PomodoroApp: App {
             }
             .onAppear() {
                 historyModel.viewContext = persistentContainer.viewContext
-                taskModel.viewContext = persistentContainer.viewContext
             }
         }
         #if os(macOS)

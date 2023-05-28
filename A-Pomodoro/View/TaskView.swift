@@ -15,6 +15,7 @@ struct TaskContent: View {
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.mainWindowSize) var mainWindowSize
     @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
+    @EnvironmentObject var taskModel: TaskModel
     @StateObject var controller = PersistenceController.active
     @State var task: Task? = nil
     @State var completion: Bool? = nil
@@ -79,45 +80,37 @@ struct TaskContent: View {
                 }
             }
         }
-        .onAppear {
+        .onChange(of: taskModel.reminderCategories) {
+            newCats in
+            ALog("newCats.count=\(newCats.count)")
             self.task = controller.getActiveTask(context: viewContext)
             updateCompletion()
+        }
+        .onAppear {
+            self.task = controller.getActiveTask(context: viewContext)
+            taskModel.updateReminderCategories()
         }
     }
     
     func updateCompletion() {
         guard let task = task,
             let title = title,
-            !title.isEmpty
+            !title.isEmpty,
+            let categoryTitle = task.category?.title,
+            let tempCat = taskModel.reminderCategories.first(where: { $0.title == categoryTitle }),
+            let tempTask = tempCat.tasks.first(where: { $0.title == title })
         else {
             ALog(level: .warning, "No task to complete")
             return
         }
-        let store = EKEventStore()
-        let reminderLists = store.calendars(for: .reminder)
-        guard let list = reminderLists.first(where: { $0.title == task.category?.title }) else {
-            ALog(level: .warning, "No Reminders List matching \(task.category?.title ?? "nil")")
-            return
+        switch (tempTask.status) {
+        case .completed:
+            self.completion = true
+        case .todo:
+            self.completion = false
+        default:
+            self.completion = nil
         }
-        let pred = store.predicateForReminders(in: [list])
-        store.fetchReminders(matching: pred, completion: {(_ reminders: [Any]?) -> Void in
-            guard let reminders = reminders as? [EKReminder?] else {
-                ALog("Did not get EKReminder list from fetchReminders")
-                return
-            }
-            for reminder: EKReminder? in reminders {
-                // Do something for each reminder.
-                guard let reminder = reminder,
-                    let title = reminder.title
-                else {
-                    ALog("Reminder is nil")
-                    continue
-                }
-                if title == task.title {
-                    self.completion = reminder.isCompleted
-                }
-            }
-        })
     }
     
     func completeTask() {

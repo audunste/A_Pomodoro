@@ -5,6 +5,10 @@
 //  Created by Audun Steinholm on 17/05/2023.
 //
 
+#if os(iOS)
+import UIKit
+#endif
+
 import SwiftUI
 import CoreData
 import CloudKit
@@ -53,8 +57,10 @@ struct TaskSheet: View {
     #endif
   
     @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
+    @EnvironmentObject var taskModel: TaskModel
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
+    @Environment(\.scenePhase) var scenePhase
     @AppStorage("focusAndBreakStage") private var focusAndBreakStage = 0
     @State private var presentedCategories: [TempCategory] = []
     @State var activeCategory: String?
@@ -90,13 +96,34 @@ struct TaskSheet: View {
             }
             ALog("self.activeTask: \(String(describing: self.activeTask))")
         }
+        .onChange(of: taskModel.mergedCategories) {
+            newCats in
+            guard let presentedCategory = presentedCategories.last else {
+                return
+            }
+            ALog("mergedCategories changed, checking if view needs update")
+            if let match = newCats.first(where: { $0.title == presentedCategory.title }),
+                match != presentedCategory
+            {
+                var modPresented = self.presentedCategories
+                modPresented[modPresented.count - 1] = match
+                self.presentedCategories = modPresented
+                updateActiveTask()
+            }
+        }
+        #if os(iOS)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            taskModel.updateReminderCategories()
+        }
+        #endif
         .onAppear {
-            initActiveTask()
+            updateActiveTask()
         }
         .onDisappear {
             ALog("onDisappear cat: \(self.activeTask ?? "nil") task: \(self.activeCategory ?? "nil")")
             applyActiveTask()
         }
+        
     }
     
     var selectedCategoryTitle: String? {
@@ -125,7 +152,7 @@ struct TaskSheet: View {
         })
     }
 
-    func initActiveTask() {
+    func updateActiveTask() {
         viewContext.perform {
             guard let task = PersistenceController.active.getAssignOrCreateActiveTask(context: viewContext) else {
                 ALog(level: .warning, "No active task")
@@ -149,69 +176,13 @@ struct CategoryList: View {
     @State var showSyncButton: Bool = false
     @Binding var activeCategory: String?
     
-    private var myCategories: [Category] {
-        categories.filter { $0.isMine }
-    }
-    
-    private var mergedCategories: [TempCategory] {
-        var retval = [TempCategory]()
-        // First add incomplete reminders in order
-        for tempCat in taskModel.reminderCategories {
-            var tempTasks = [TempTask]()
-            for tempTask in tempCat.tasks {
-                if tempTask.status == .todo {
-                    tempTasks.append(tempTask)
-                }
-            }
-            if tempTasks.isEmpty {
-                continue
-            }
-            retval.append(TempCategory(title: tempCat.title, tasks: tempTasks))
-        }
-        // Add categories and tasks that have completed pomodoros
-        for cat in myCategories {
-            guard let tasks = cat.tasks else {
-                continue
-            }
-            if let i = retval.firstIndex(where: { $0.title == cat.title }) {
-                for case let task as Task in tasks {
-                    if !retval[i].tasks.contains(where: { $0.title == task.title }) {
-                        retval[i].tasks.append(TempTask(task: task))
-                    }
-                }
-            } else {
-                var tempTasks = [TempTask]()
-                for case let task as Task in tasks {
-                    tempTasks.append(TempTask(task: task))
-                }
-                if tempTasks.isEmpty {
-                    continue
-                }
-                retval.append(TempCategory(title: cat.title ?? .defaultCategory, tasks: tempTasks))
-            }
-        }
-        // Change status to .completed for completed reminders that have pomodoros
-        for tempCat in taskModel.reminderCategories {
-            if let i = retval.firstIndex(where: { $0.title == tempCat.title }) {
-                for tempTask in tempCat.tasks {
-                    if tempTask.status == .completed,
-                        let j = retval[i].tasks.firstIndex(where: { $0.title == tempTask.title })
-                    {
-                        retval[i].tasks[j].status = .completed
-                    }
-                }
-            }
-        }
-        return retval
-    }
-
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 TaskHeader()
                 .fixedSize(horizontal: false, vertical: true)
                 List {
-                    ForEach(mergedCategories, id: \.title) {
+                    ForEach(taskModel.mergedCategories, id: \.title) {
                         cat in
                         CategoryItem(category: cat, isSelected: cat.title == activeCategory)
                     }
@@ -268,7 +239,7 @@ struct CategoryList: View {
         if self.showSyncButton {
             self.showSyncButton = false
         }
-        taskModel.updateCategories()
+        taskModel.updateReminderCategories()
     }
     
 }
@@ -286,18 +257,21 @@ struct CategoryItem: View {
 }
 
 struct TaskItem: View {
+    var categoryTitle: String
     var task: TempTask
     var isSelected: Bool
     var selectTaskHandler: () -> Void
+    @EnvironmentObject var taskModel: TaskModel
     
     var body: some View {
         HStack(spacing: 0) {
             if task.status == .todo || task.status == .completed {
                 Button {
                     ALog("onTap Task Complete")
-                    //selectTaskHandler()
+                    completeTask()
                 } label: {
-                    Image(systemName: task.status == .completed ? "checkmark.circle.fill" : "circle")
+                    let isChecked = task.status == .completed || task == taskModel.completingTask
+                    Image(systemName: isChecked ? "checkmark.circle.fill" : "circle")
                     .resizable()
                     .frame(width: 24, height: 24)
                     .padding(.trailing, 12)
@@ -317,6 +291,28 @@ struct TaskItem: View {
             .buttonStyle(UnstyledButton())
         }
         .listRowBackground(isSelected ? Color(white: 0.5, opacity: 0.4) : Color(white: 0.5, opacity: 0.0001))
+    }
+    
+    func completeTask() {
+        guard task != taskModel.completingTask else {
+            return
+        }
+        TaskModel.completeTask(taskTitle: task.title, categoryTitle: categoryTitle, activateNext: isSelected) { callback in
+            switch(callback) {
+            case .fail:
+                taskModel.completingTask = nil
+            case .processing:
+                taskModel.completingTask = task
+            case .complete:
+                updateSoon()
+            }
+        }
+    }
+    
+    func updateSoon() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            taskModel.updateReminderCategories()
+        }
     }
 }
 
@@ -379,7 +375,9 @@ struct TaskList: View {
                     Section(header: Text("Todo")) {
                         ForEach(todoTasks) {
                             task in
-                            TaskItem(task: task,
+                            TaskItem(
+                                categoryTitle: category.title,
+                                task: task,
                                 isSelected: activeTask == task.title,
                                 selectTaskHandler: {
                                     self.activeTask = task.title
@@ -390,7 +388,9 @@ struct TaskList: View {
                         Section(header: Text("Completed")) {
                             ForEach(completedTasks) {
                                 task in
-                                TaskItem(task: task,
+                                TaskItem(
+                                    categoryTitle: category.title,
+                                    task: task,
                                     isSelected: activeTask == task.title,
                                     selectTaskHandler: {
                                         self.activeTask = task.title
@@ -402,7 +402,9 @@ struct TaskList: View {
                         Section(header: Text("Cancelled")) {
                             ForEach(cancelledTasks) {
                                 task in
-                                TaskItem(task: task,
+                                TaskItem(
+                                    categoryTitle: category.title,
+                                    task: task,
                                     isSelected: activeTask == task.title,
                                     selectTaskHandler: {
                                         self.activeTask = task.title
@@ -413,7 +415,9 @@ struct TaskList: View {
                 } else {
                     ForEach(category.tasks) {
                         task in
-                        TaskItem(task: task,
+                        TaskItem(
+                            categoryTitle: category.title,
+                            task: task,
                             isSelected: activeTask == task.title,
                             selectTaskHandler: {
                                 self.activeTask = task.title
