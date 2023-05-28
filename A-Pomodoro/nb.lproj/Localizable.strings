@@ -1,11 +1,20 @@
 /* No comment provided by engineer. */
+"Cancelled" = "Avbrutt";
+
+/* No comment provided by engineer. */
 "Categories" = "Kategorier";
 
 /* No comment provided by engineer. */
 "Close" = "Lukk";
 
+/* No comment provided by engineer. */
+"Completed" = "Fullført";
+
 /* Name of default category */
 "Default Category" = "Standardkategori";
+
+/* Name of default task */
+"Default Task" = "Standardoppgave";
 
 /* No comment provided by engineer. */
 "Empty people array" = "Laster...";
@@ -21,6 +30,9 @@
 
 /* Action */
 "Not now" = "Ikke nå";
+
+/* No comment provided by engineer. */
+"Only tasks you've actively engaged with will remain in the 'Completed' or 'Cancelled' sections after completion or deletion." = "Kun oppgaver du har aktivt brukt vil bli lagret i seksjonene 'Fullført' eller 'Avbrutt' etter fullførelse eller sletting.";
 
 /* Pause button */
 "Pause" = "Pause";
@@ -51,6 +63,12 @@
 
 /* No comment provided by engineer. */
 "Sync with Reminders" = "Synk med Påminnelser";
+
+/* No comment provided by engineer. */
+"Tasks from Reminders" = "Oppgaver fra Påminnelser";
+
+/* No comment provided by engineer. */
+"Todo" = "Gjenstår";
 
 /* History header */
 "Your history" = "Din historikk";

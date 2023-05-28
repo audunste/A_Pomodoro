@@ -23,7 +23,7 @@ extension String {
     }
 }
 
-enum TaskStatus {
+enum TaskStatus: String {
     case todo
     case completed
     case cancelled
@@ -76,6 +76,7 @@ struct TaskSheet: View {
                     .transition(.move(edge: .trailing))
                 }
             }
+            .animation(.easeInOut, value: taskModel.mergedCategories)
             .tint(Color("BarText"))
             .background(Color("BarBackground"))
             .environment(\.up, {
@@ -297,7 +298,7 @@ struct TaskItem: View {
         guard task != taskModel.completingTask else {
             return
         }
-        TaskModel.completeTask(taskTitle: task.title, categoryTitle: categoryTitle, activateNext: isSelected) { callback in
+        TaskModel.completeTask(taskTitle: task.title, categoryTitle: categoryTitle, activateNext: isSelected, fromTaskSheet: true) { callback in
             switch(callback) {
             case .fail:
                 taskModel.completingTask = nil
@@ -310,7 +311,7 @@ struct TaskItem: View {
     }
     
     func updateSoon() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             taskModel.updateReminderCategories()
         }
     }
@@ -335,6 +336,7 @@ struct TaskList: View {
     @Environment(\.up) var up
     var category: TempCategory
     @Binding var activeTask: String?
+    @State var showInfo: Bool = false
     
     var body: some View {
         let todoTasks = category.tasks.filter({ $0.status == .todo })
@@ -362,9 +364,30 @@ struct TaskList: View {
                 
                 Spacer()
                 
-                Spacer()
-                    .frame(width: 24, height: 24)
-                    .padding(16)
+                if showSections {
+                    Button {
+                        ALog("onTap header info")
+                        showInfo = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .padding(18)
+                    }
+                    .buttonStyle(.borderless)
+                    .contentShape(Rectangle())
+                    .alert("Tasks from Reminders", isPresented: $showInfo) {
+                        Button("OK") {
+                            showInfo = false
+                        }
+                    } message: {
+                        Text("Only tasks you've actively engaged with will remain in the 'Completed' or 'Cancelled' sections after completion or deletion.")
+                    }
+                } else {
+                    Spacer()
+                        .frame(width: 24, height: 24)
+                        .padding(16)
+                }
             }
             .frame(maxWidth: .infinity)
             .background(Color("BarBackground"))

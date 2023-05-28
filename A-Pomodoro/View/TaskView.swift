@@ -17,8 +17,8 @@ struct TaskContent: View {
     @EnvironmentObject var lastPomodoroEntryBinder: LatestObjectBinder<PomodoroEntry>
     @EnvironmentObject var taskModel: TaskModel
     @StateObject var controller = PersistenceController.active
-    @State var task: Task? = nil
-    @State var completion: Bool? = nil
+    @Binding var task: Task?
+    @Binding var completion: Bool?
     @AppStorage("focusAndBreakStage") private var focusAndBreakStage = 0
 
     private var title: String? {
@@ -82,7 +82,7 @@ struct TaskContent: View {
         }
         .onChange(of: taskModel.reminderCategories) {
             newCats in
-            ALog("newCats.count=\(newCats.count)")
+            ALog("tempTask newCats.count=\(newCats.count)")
             self.task = controller.getActiveTask(context: viewContext)
             updateCompletion()
         }
@@ -100,9 +100,10 @@ struct TaskContent: View {
             let tempCat = taskModel.reminderCategories.first(where: { $0.title == categoryTitle }),
             let tempTask = tempCat.tasks.first(where: { $0.title == title })
         else {
-            ALog(level: .warning, "No task to complete")
+            ALog(level: .warning, "No tempTask \(String(describing: title)) \(String(describing: task?.category?.title))")
             return
         }
+        ALog("tempTask.status: \(tempTask.status)")
         switch (tempTask.status) {
         case .completed:
             self.completion = true
@@ -120,8 +121,8 @@ struct TaskContent: View {
                 self.completion = nil
             case .processing:
                 self.completion = true
-            default:
-                break
+            case .complete:
+                taskModel.updateReminderCategories()
             }
         }
     }
@@ -130,6 +131,8 @@ struct TaskContent: View {
 
 struct TaskView: View {
     var selectTaskHandler: () -> Void
+    @State var completion: Bool? = nil
+    @State var task: Task?
     
     var body: some View {
         GeometryReader { geometry in
@@ -137,7 +140,9 @@ struct TaskView: View {
                 let timerSize = min(Size.maxTimerWidth, geometry.size.height)
                 let remainingWidth = geometry.size.width - timerSize
                 let taskX0 = remainingWidth / 2 + timerSize
-                TaskContent(selectTaskHandler: selectTaskHandler)
+                TaskContent(selectTaskHandler: selectTaskHandler,
+                    task: $task,
+                    completion: $completion)
                 .frame(width: remainingWidth / 2, height: geometry.size.height)
                 .offset(x: taskX0, y: 0)
             } else {
@@ -145,7 +150,9 @@ struct TaskView: View {
                 let timerSize = min(Size.maxTimerWidth, geometry.size.width)
                 let remainingHeight = tabContentHeight - timerSize
                 let taskY0 = remainingHeight / 2 + timerSize
-                TaskContent(selectTaskHandler: selectTaskHandler)
+                TaskContent(selectTaskHandler: selectTaskHandler,
+                    task: $task,
+                    completion: $completion)
                 .frame(width: geometry.size.width, height: remainingHeight / 2)
                 .offset(x: 0, y: taskY0)
             }
